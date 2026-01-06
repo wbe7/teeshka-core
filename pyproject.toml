@@ -31,8 +31,13 @@ select = [
     "TCH",    # flake8-type-checking
     "PTH",    # flake8-use-pathlib
     "RUF",    # ruff-specific rules
+    "S",      # flake8-bandit (security)
+    "T20",    # flake8-print (no print statements)
 ]
-ignore = []
+ignore = [
+    "S101",   # Allow assert in tests
+]
+
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
@@ -44,4 +49,8 @@ asyncio_mode = "auto"
 [dependency-groups]
 dev = [
     "ruff>=0.14.10",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.25",
+    "pre-commit>=4.0",
 ]
+

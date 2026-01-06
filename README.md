@@ -8,21 +8,26 @@ FastAPI-based orchestrator with PydanticAI agents for handling requests from Edg
 
 See [Master Design Doc](../.gemini/GEMINI.md) for full architecture.
 
-## Quick Start
+## Development
 
 ```bash
 # Install dependencies
 uv sync
 
-# Run development server
-uv run fastapi dev src/main.py
+# Linting (zero errors required)
+make lint
 
-# Run linter
-uv run ruff check .
-uv run ruff format --check .
+# Auto-fix lint errors
+make lint-fix
 
 # Run tests
-uv run pytest
+make test
+
+# Run development server (Phase 3+)
+make run
+
+# Install pre-commit hooks
+uv run pre-commit install
 ```
 
 ## Project Structure
@@ -38,4 +43,6 @@ tests/          # Unit and integration tests
 
 ## Status
 
-🚧 **Phase 1**: Project Scaffold (in progress)
+✅ **Phase 1**: Project Scaffold
+🚧 **Phase 2**: Linting & CI Setup
+
