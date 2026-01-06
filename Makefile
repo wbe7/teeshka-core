@@ -1,4 +1,4 @@
-.PHONY: lint lint-fix test run
+.PHONY: lint lint-fix test run buildx
 
 lint:
 	uv run ruff check .
@@ -13,3 +13,6 @@ test:
 
 run:
 	uv run fastapi dev src/api/main.py
+
+buildx:
+	docker buildx build --platform linux/amd64 -t wbe7/teeshka-core:dev .
