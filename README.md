@@ -62,6 +62,23 @@ Configuration is managed via environment variables using `pydantic-settings`.
 - `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`
 - `S3_ACCESS_KEY`, `S3_SECRET_KEY`
 
+## Logging
+
+Structured JSON logging via `structlog` for K8s/Loki/ELK compatibility.
+
+**Features:**
+- JSON format output to stdout
+- `trace_id` in every log (correlates with Langfuse)
+- Request lifecycle logging (`request_started`, `request_completed`)
+- Exception logging with stack traces
+
+**Log Level:** Set via `LOG_LEVEL` env var (default: `INFO`)
+
+**Sample log:**
+```json
+{"event": "request_completed", "trace_id": "abc-123", "status_code": 200, "duration_ms": 15, "level": "info", "timestamp": "2026-01-07T12:00:00.000000Z"}
+```
+
 ## Docker
 
 ```bash
@@ -80,13 +97,15 @@ curl http://localhost:8000/api/v1/health
 ```
 src/
 ├── api/
-│   ├── main.py      # FastAPI application + lifespan
-│   ├── health.py    # Health check endpoints
-│   ├── schemas.py   # Pydantic response models
-│   └── settings.py  # Configuration management
-└── agents/          # PydanticAI agents (future phases)
+│   ├── main.py       # FastAPI application + lifespan
+│   ├── health.py     # Health check endpoints
+│   ├── logging.py    # Structured logging configuration
+│   ├── middleware.py # Request logging middleware
+│   ├── schemas.py    # Pydantic response models
+│   └── settings.py   # Configuration management
+└── agents/           # PydanticAI agents (future phases)
 
-tests/               # Unit and integration tests
+tests/                # Unit and integration tests
 ```
 
 ## Status
@@ -94,5 +113,6 @@ tests/               # Unit and integration tests
 ✅ **Phase 1**: Project Scaffold  
 ✅ **Phase 2**: Linting & CI Setup  
 ✅ **Phase 3**: FastAPI Skeleton + Health  
-✅ **Phase 4**: Settings & Configuration
+✅ **Phase 4**: Settings & Configuration  
+✅ **Phase 5**: Logging Setup
 
