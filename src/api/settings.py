@@ -77,6 +77,9 @@ class Settings(BaseSettings):
     # === Security ===
     confirmation_ttl_minutes: int = 5
 
+    # === Logging ===
+    log_level: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
 
 @lru_cache
 def get_settings() -> Settings:
