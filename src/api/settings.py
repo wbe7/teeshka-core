@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     langfuse_secret_key: SecretStr
     langfuse_base_url: str = "https://langfuse.cloudnative.space"
 
+    # === Langfuse E2E (teeshka-e2e project, optional) ===
+    langfuse_e2e_public_key: SecretStr | None = None
+    langfuse_e2e_secret_key: SecretStr | None = None
+
     # === Mem0 Self-hosted Server ===
     mem0_api_url: str = "http://mem0.teeshka.svc.cluster.local:8080"
     mem0_api_key: SecretStr | None = None

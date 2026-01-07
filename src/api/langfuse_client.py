@@ -82,8 +82,6 @@ def observe_request[F: Callable](func: F) -> F:
         async def my_handler(request: TeeshkaRequest):
             ...
     """
-    # Apply langfuse observe decorator first
-    observed_func = observe()(func)
 
     def _update_trace_from_context() -> None:
         """Get trace_id from context and update the Langfuse trace."""
@@ -97,19 +95,21 @@ def observe_request[F: Callable](func: F) -> F:
         except Exception:
             log.warning("langfuse_trace_update_failed", trace_id=trace_id, exc_info=True)
 
-    @wraps(func)
-    async def async_wrapper(*args, **kwargs):
-        _update_trace_from_context()
-        return await observed_func(*args, **kwargs)
+    if asyncio.iscoroutinefunction(func):
+
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            _update_trace_from_context()
+            return await func(*args, **kwargs)
+
+        return observe()(async_wrapper)  # type: ignore[return-value]
 
     @wraps(func)
     def sync_wrapper(*args, **kwargs):
         _update_trace_from_context()
-        return observed_func(*args, **kwargs)
+        return func(*args, **kwargs)
 
-    if asyncio.iscoroutinefunction(func):
-        return async_wrapper  # type: ignore[return-value]
-    return sync_wrapper  # type: ignore[return-value]
+    return observe()(sync_wrapper)  # type: ignore[return-value]
 
 
 __all__ = [

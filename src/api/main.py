@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     log = get_logger(__name__)
 
-    # Initialize Langfuse client (validates connection)
+    # Initialize Langfuse client (creates singleton, connection validated on first use)
     init_langfuse()
     log.info("langfuse_initialized", base_url=settings.langfuse_base_url)
 
