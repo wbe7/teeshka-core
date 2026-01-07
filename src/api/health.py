@@ -42,5 +42,5 @@ def _check_langfuse() -> bool:
         client = get_langfuse()
         return client.auth_check()
     except Exception:
-        log.warning("langfuse_health_check_failed")
+        log.warning("langfuse_health_check_failed", exc_info=True)
         return False

@@ -85,33 +85,29 @@ def observe_request[F: Callable](func: F) -> F:
     # Apply langfuse observe decorator first
     observed_func = observe()(func)
 
+    def _update_trace_from_context() -> None:
+        """Get trace_id from context and update the Langfuse trace."""
+        trace_id = get_trace_id()
+        if not trace_id:
+            return
+
+        try:
+            langfuse = get_client()
+            langfuse.update_current_trace(
+                id=trace_id,
+                name=func.__name__,
+            )
+        except Exception:
+            log.warning("langfuse_trace_update_failed", trace_id=trace_id, exc_info=True)
+
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
-        # Get trace_id from request context (set by middleware)
-        trace_id = get_trace_id()
-        if trace_id:
-            try:
-                langfuse = get_client()
-                langfuse.update_current_trace(
-                    id=trace_id,
-                    name=func.__name__,
-                )
-            except Exception:
-                log.warning("langfuse_trace_update_failed", trace_id=trace_id)
+        _update_trace_from_context()
         return await observed_func(*args, **kwargs)
 
     @wraps(func)
     def sync_wrapper(*args, **kwargs):
-        trace_id = get_trace_id()
-        if trace_id:
-            try:
-                langfuse = get_client()
-                langfuse.update_current_trace(
-                    id=trace_id,
-                    name=func.__name__,
-                )
-            except Exception:
-                log.warning("langfuse_trace_update_failed", trace_id=trace_id)
+        _update_trace_from_context()
         return observed_func(*args, **kwargs)
 
     if asyncio.iscoroutinefunction(func):
