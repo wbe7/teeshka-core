@@ -9,6 +9,7 @@ from src.api.health import router as health_router
 from src.api.langfuse_client import init_langfuse, shutdown_langfuse
 from src.api.logging import configure_logging, get_logger
 from src.api.middleware import RequestLoggingMiddleware
+from src.api.query import router as query_router
 from src.api.settings import get_settings
 
 
@@ -53,3 +54,4 @@ app = FastAPI(
 app.add_middleware(RequestLoggingMiddleware)
 
 app.include_router(health_router, prefix="/api/v1")
+app.include_router(query_router, prefix="/api/v1")
