@@ -13,7 +13,7 @@ See [Master Design Doc](../.gemini/GEMINI.md) for full architecture.
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/health` | Liveness probe for K8s |
-| GET | `/api/v1/ready` | Readiness probe (stub) |
+| GET | `/api/v1/ready` | Readiness probe (includes Langfuse status) |
 | GET | `/api/v1/docs` | Swagger UI |
 | GET | `/api/v1/redoc` | ReDoc |
 | GET | `/api/v1/openapi.json` | OpenAPI schema |
@@ -108,11 +108,28 @@ src/
 tests/                # Unit and integration tests
 ```
 
+## Observability
+
+**Langfuse** tracing for full request observability.
+
+**Configuration:**
+- `LANGFUSE_PUBLIC_KEY` — Your Langfuse project public key
+- `LANGFUSE_SECRET_KEY` — Your Langfuse project secret key  
+- `LANGFUSE_BASE_URL` — Self-hosted URL (default: `https://langfuse.cloudnative.space`)
+
+**Features:**
+- Client initialization at startup, flush on shutdown
+- Readiness probe includes `langfuse: true|false` status
+- `@observe_request` decorator for tracing with trace_id correlation
+- Graceful degradation if Langfuse unavailable
+
 ## Status
 
 ✅ **Phase 1**: Project Scaffold  
 ✅ **Phase 2**: Linting & CI Setup  
 ✅ **Phase 3**: FastAPI Skeleton + Health  
 ✅ **Phase 4**: Settings & Configuration  
-✅ **Phase 5**: Logging Setup
+✅ **Phase 5**: Logging Setup  
+✅ **Phase 7**: Langfuse Integration
+
 

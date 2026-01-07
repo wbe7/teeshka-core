@@ -1,5 +1,7 @@
 """Unit tests for health check endpoints."""
 
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 
 from src.api.main import app
@@ -36,15 +38,30 @@ class TestReadyEndpoint:
         assert data["status"] == "ok"
         assert "checks" in data
 
-    def test_ready_checks_are_null_when_not_implemented(self) -> None:
-        """Ready checks are null until dependencies are integrated."""
+    def test_ready_checks_langfuse_status(self) -> None:
+        """Ready checks include Langfuse status."""
         response = client.get("/api/v1/ready")
 
         data = response.json()
         checks = data["checks"]
+        # Langfuse check should return boolean (True if connected, False otherwise)
+        assert checks["langfuse"] in (True, False)
+        # Other checks still null
         assert checks["postgres"] is None
         assert checks["redis"] is None
         assert checks["mem0"] is None
+
+    @patch("src.api.health._check_langfuse", return_value=True)
+    def test_ready_langfuse_healthy(self, _mock_check) -> None:
+        """Ready returns langfuse=True when connected."""
+        response = client.get("/api/v1/ready")
+        assert response.json()["checks"]["langfuse"] is True
+
+    @patch("src.api.health._check_langfuse", return_value=False)
+    def test_ready_langfuse_unhealthy(self, _mock_check) -> None:
+        """Ready returns langfuse=False when disconnected."""
+        response = client.get("/api/v1/ready")
+        assert response.json()["checks"]["langfuse"] is False
 
 
 class TestOpenAPIEndpoints:

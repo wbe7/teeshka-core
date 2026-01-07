@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.api.health import router as health_router
+from src.api.langfuse_client import init_langfuse, shutdown_langfuse
 from src.api.logging import configure_logging, get_logger
 from src.api.middleware import RequestLoggingMiddleware
 from src.api.settings import get_settings
@@ -23,10 +24,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     configure_logging(settings.log_level)
 
     log = get_logger(__name__)
+
+    # Initialize Langfuse client (validates connection)
+    init_langfuse()
+    log.info("langfuse_initialized", base_url=settings.langfuse_base_url)
+
     log.info("application_started", version=app.version)
 
     yield
 
+    # Flush pending Langfuse events before shutdown
+    shutdown_langfuse()
+    log.info("langfuse_flushed")
     log.info("application_shutdown")
 
 
