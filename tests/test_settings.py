@@ -8,7 +8,6 @@ from pydantic import SecretStr, ValidationError
 
 from src.api.settings import Settings, get_settings
 
-# Minimal valid environment for testing
 VALID_ENV = {
     "ALLOWED_USER_ID": "123456789",
     "POSTGRES_URL": "postgresql+asyncpg://user:pass@localhost:5432/teeshka",
@@ -22,6 +21,14 @@ VALID_ENV = {
     "S3_ACCESS_KEY": "test_access",
     "S3_SECRET_KEY": "test_secret",
 }
+
+
+@pytest.fixture(autouse=True)
+def clear_settings_cache():
+    """Clear get_settings cache before each test to prevent cross-test pollution."""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 class TestSettingsLoading:
@@ -43,7 +50,8 @@ class TestSettingsLoading:
 
         with patch.dict(os.environ, incomplete_env, clear=True):
             with pytest.raises(ValidationError) as exc_info:
-                Settings()
+                # Use _env_file=None to prevent reading local .env file
+                Settings(_env_file=None)
 
             errors = exc_info.value.errors()
             assert any(e["loc"] == ("allowed_user_id",) for e in errors)

@@ -1,4 +1,4 @@
-.PHONY: lint lint-fix test run buildx
+.PHONY: lint lint-fix test test-e2e test-all run buildx
 
 lint:
 	uv run ruff check .
@@ -10,6 +10,12 @@ lint-fix:
 
 test:
 	uv run pytest --cache-clear -v
+
+test-e2e:
+	uv run pytest -m e2e --cache-clear -v
+
+test-all:
+	uv run pytest -m "" --cache-clear -v
 
 run:
 	uv run fastapi dev src/api/main.py
