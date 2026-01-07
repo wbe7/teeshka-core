@@ -93,10 +93,7 @@ def observe_request[F: Callable](func: F) -> F:
 
         try:
             langfuse = get_client()
-            langfuse.update_current_trace(
-                id=trace_id,
-                name=func.__name__,
-            )
+            langfuse.update_current_trace(id=trace_id)
         except Exception:
             log.warning("langfuse_trace_update_failed", trace_id=trace_id, exc_info=True)
 

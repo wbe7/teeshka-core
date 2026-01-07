@@ -1,6 +1,7 @@
 """Health check endpoints for Teeshka Core."""
 
 from fastapi import APIRouter
+from fastapi.concurrency import run_in_threadpool
 
 from src.api.langfuse_client import get_langfuse
 from src.api.logging import get_logger
@@ -31,16 +32,20 @@ async def ready() -> ReadyResponse:
     - Phase 20: Redis check
     - Phase 21: Mem0 check
     """
-    langfuse_ok = _check_langfuse()
+    langfuse_ok = await _check_langfuse()
     checks = ReadyCheck(langfuse=langfuse_ok)
     return ReadyResponse(status="ok", checks=checks)
 
 
-def _check_langfuse() -> bool:
-    """Check Langfuse connectivity via auth_check()."""
+async def _check_langfuse() -> bool:
+    """Check Langfuse connectivity via auth_check().
+
+    Uses run_in_threadpool to avoid blocking the event loop
+    since auth_check() is a synchronous network call.
+    """
     try:
         client = get_langfuse()
-        return client.auth_check()
+        return await run_in_threadpool(client.auth_check)
     except Exception:
         log.warning("langfuse_health_check_failed", exc_info=True)
         return False
