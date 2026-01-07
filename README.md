@@ -43,14 +43,33 @@ make buildx
 uv run pre-commit install
 ```
 
+## Configuration
+
+Configuration is managed via environment variables using `pydantic-settings`.
+
+1. Copy the template:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your values (see `.env.example` for all options)
+
+3. Start the server — it will fail fast if required variables are missing
+
+**Required variables:**
+- `ALLOWED_USER_ID`, `POSTGRES_URL`, `REDIS_URL`, `GEMINI_GATEWAY_URL`
+- `TELEGRAM_BOT_TOKEN`, `LLM_API_KEY`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+- `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`
+- `S3_ACCESS_KEY`, `S3_SECRET_KEY`
+
 ## Docker
 
 ```bash
 # Build for production (linux/amd64)
 make buildx
 
-# Run locally
-docker run --rm -p 8000:8000 wbe7/teeshka-core:dev
+# Run locally (requires .env file)
+docker run --rm -p 8000:8000 --env-file .env wbe7/teeshka-core:dev
 
 # Verify
 curl http://localhost:8000/api/v1/health
@@ -61,9 +80,10 @@ curl http://localhost:8000/api/v1/health
 ```
 src/
 ├── api/
-│   ├── main.py      # FastAPI application
+│   ├── main.py      # FastAPI application + lifespan
 │   ├── health.py    # Health check endpoints
-│   └── schemas.py   # Pydantic response models
+│   ├── schemas.py   # Pydantic response models
+│   └── settings.py  # Configuration management
 └── agents/          # PydanticAI agents (future phases)
 
 tests/               # Unit and integration tests
@@ -73,4 +93,6 @@ tests/               # Unit and integration tests
 
 ✅ **Phase 1**: Project Scaffold  
 ✅ **Phase 2**: Linting & CI Setup  
-✅ **Phase 3**: FastAPI Skeleton + Health
+✅ **Phase 3**: FastAPI Skeleton + Health  
+✅ **Phase 4**: Settings & Configuration
+
