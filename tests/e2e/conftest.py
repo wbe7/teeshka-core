@@ -24,8 +24,8 @@ def e2e_langfuse_client() -> Langfuse:
     settings = get_settings()
 
     # Validate E2E credentials are set
-    if not settings.langfuse_e2e_public_key:
-        pytest.skip("LANGFUSE_E2E_PUBLIC_KEY not set")
+    if not settings.langfuse_e2e_public_key or not settings.langfuse_e2e_secret_key:
+        pytest.skip("LANGFUSE_E2E_PUBLIC_KEY and/or LANGFUSE_E2E_SECRET_KEY not set")
 
     client = Langfuse(
         public_key=settings.langfuse_e2e_public_key.get_secret_value(),
