@@ -178,7 +178,13 @@ class S3Client:
 
         Uses filename suffix first, falls back to content_type guessing.
         """
-        ext = (Path(filename).suffix or mimetypes.guess_extension(content_type) or "").lower()
+        # Get extension from filename, fallback to content_type, normalize to lowercase
+        ext_from_filename = Path(filename).suffix
+        ext_from_content_type = (
+            mimetypes.guess_extension(content_type) if not ext_from_filename else None
+        )
+        ext = (ext_from_filename or ext_from_content_type or "").lower()
+
         unique_id = uuid_utils.uuid7()
         return f"attachments/{user_id}/{session_id}/{unique_id}{ext}"
 

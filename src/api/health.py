@@ -1,5 +1,7 @@
 """Health check endpoints for Teeshka Core."""
 
+import asyncio
+
 from fastapi import APIRouter
 from fastapi.concurrency import run_in_threadpool
 
@@ -59,8 +61,6 @@ async def _check_s3() -> bool | None:
     Uses a 5-second timeout to prevent hanging when S3 is unavailable.
     Returns None if S3 is not configured (skip check).
     """
-    import asyncio
-
     try:
         from src.api.settings import get_settings
         from src.storage import S3Client
