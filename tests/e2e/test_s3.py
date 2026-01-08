@@ -9,10 +9,6 @@ import httpx
 import pytest
 import uuid_utils
 
-TEST_CONTENT = b"E2E test file content - " + uuid_utils.uuid7().bytes
-TEST_FILENAME = "e2e_test.txt"
-TEST_CONTENT_TYPE = "text/plain"
-
 
 @pytest.mark.e2e
 class TestS3E2E:
@@ -31,13 +27,18 @@ class TestS3E2E:
         user_id = 999999
         session_id = uuid_utils.uuid7()
 
+        # Generate unique content per test for isolation
+        test_content = b"E2E upload test - " + uuid_utils.uuid7().bytes
+        test_filename = "e2e_test.txt"
+        test_content_type = "text/plain"
+
         # Upload
         key = await e2e_s3_client.upload_attachment(
             user_id=user_id,
             session_id=session_id,
-            content=TEST_CONTENT,
-            filename=TEST_FILENAME,
-            content_type=TEST_CONTENT_TYPE,
+            content=test_content,
+            filename=test_filename,
+            content_type=test_content_type,
         )
 
         # Verify key format
@@ -53,7 +54,7 @@ class TestS3E2E:
         async with httpx.AsyncClient() as http_client:
             response = await http_client.get(presigned_url)
             assert response.status_code == 200
-            assert response.content == TEST_CONTENT
+            assert response.content == test_content
 
         # Cleanup
         deleted = await e2e_s3_client.delete_attachment(key)

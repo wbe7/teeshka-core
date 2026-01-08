@@ -8,16 +8,19 @@ Key Format: attachments/{user_id}/{session_id}/{uuid}.{ext}
 
 import asyncio
 import mimetypes
-from functools import lru_cache
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 from uuid import UUID
 
 import structlog
 import uuid_utils
 from aiobotocore.session import get_session
+from botocore.exceptions import ClientError, EndpointConnectionError
 
 from src.api.settings import get_settings
+
+T = TypeVar("T")
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client as S3ClientType
@@ -114,13 +117,12 @@ class S3Client:
             await self._client.__aexit__(exc_type, exc_val, exc_tb)
             self._client = None
 
-    async def _retry_operation(self, operation_name: str, func, *args, **kwargs):
+    async def _retry_operation(self, operation_name: str, func: Callable[[], Awaitable[T]]) -> T:
         """Execute operation with exponential backoff retry.
 
         Args:
             operation_name: Name for logging
-            func: Async function to execute
-            *args, **kwargs: Arguments to pass to func
+            func: Async function to execute (no args, use closure)
 
         Returns:
             Result from func
@@ -128,13 +130,13 @@ class S3Client:
         Raises:
             S3Error: If all retries exhausted
         """
-        last_exception = None
+        last_exception: Exception | None = None
         backoff_ms = INITIAL_BACKOFF_MS
 
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                return await func(*args, **kwargs)
-            except Exception as e:
+                return await func()
+            except (ClientError, EndpointConnectionError, TimeoutError) as e:
                 last_exception = e
                 if attempt < MAX_RETRIES:
                     log.warning(
@@ -153,7 +155,9 @@ class S3Client:
             attempts=MAX_RETRIES,
             error=str(last_exception),
         )
-        raise S3Error(f"{operation_name} failed after {MAX_RETRIES} attempts: {last_exception}")
+        raise S3Error(
+            f"{operation_name} failed after {MAX_RETRIES} attempts: {last_exception}"
+        ) from last_exception
 
     def _generate_s3_key(
         self,
@@ -301,15 +305,16 @@ class S3Client:
             return False
 
 
-@lru_cache
-def get_s3_client() -> S3Client:
-    """Get S3Client instance for dependency injection.
+async def get_s3_client():
+    """Async generator for FastAPI dependency injection.
 
-    Note: Client must be used with async context manager:
-        async with get_s3_client() as client:
-            ...
+    Usage:
+        @app.post("/upload")
+        async def endpoint(client: S3Client = Depends(get_s3_client)):
+            await client.upload_attachment(...)
 
-    Returns:
-        Configured S3Client instance
+    Yields:
+        Configured and connected S3Client instance
     """
-    return S3Client()
+    async with S3Client() as client:
+        yield client

@@ -53,11 +53,11 @@ async def _check_langfuse() -> bool:
         return False
 
 
-async def _check_s3() -> bool:
+async def _check_s3() -> bool | None:
     """Check S3 connectivity via head_bucket.
 
     Uses a 5-second timeout to prevent hanging when S3 is unavailable.
-    Returns False immediately if S3 is not configured.
+    Returns None if S3 is not configured (skip check).
     """
     import asyncio
 
@@ -70,7 +70,7 @@ async def _check_s3() -> bool:
         # Skip if S3 credentials not configured
         if not settings.s3_access_key or not settings.s3_secret_key:
             log.debug("s3_health_check_skipped", reason="credentials_not_configured")
-            return False
+            return None
 
         async with asyncio.timeout(5):  # 5 second timeout
             async with S3Client() as client:

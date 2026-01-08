@@ -286,7 +286,9 @@ class TestS3ClientRetry:
     """Tests for retry logic."""
 
     async def test_retry_on_transient_failure(self, mock_aiobotocore_session) -> None:
-        """Client retries on transient failures."""
+        """Client retries on transient failures (ClientError)."""
+        from botocore.exceptions import ClientError
+
         mock_session, mock_client = mock_aiobotocore_session
 
         call_count = 0
@@ -295,7 +297,10 @@ class TestS3ClientRetry:
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                raise Exception("Transient error")
+                raise ClientError(
+                    {"Error": {"Code": "ServiceUnavailable", "Message": "Transient"}},
+                    "PutObject",
+                )
             return {}
 
         mock_client.put_object = AsyncMock(side_effect=failing_put_object)
@@ -325,10 +330,17 @@ class TestS3ClientRetry:
 
     async def test_retry_exhausted_raises_error(self, mock_aiobotocore_session) -> None:
         """Client raises error after all retries exhausted."""
+        from botocore.exceptions import ClientError
+
         mock_session, mock_client = mock_aiobotocore_session
 
-        # Always fail
-        mock_client.put_object = AsyncMock(side_effect=Exception("Persistent error"))
+        # Always fail with ClientError
+        mock_client.put_object = AsyncMock(
+            side_effect=ClientError(
+                {"Error": {"Code": "InternalError", "Message": "Persistent"}},
+                "PutObject",
+            )
+        )
 
         with patch("src.storage.s3_client.get_session", return_value=mock_session):
             from src.storage.s3_client import S3Client, S3UploadError
@@ -351,7 +363,7 @@ class TestS3ClientRetry:
                         content_type=TEST_CONTENT_TYPE,
                     )
 
-            assert "Persistent error" in str(exc_info.value)
+            assert "Persistent" in str(exc_info.value)
             assert mock_client.put_object.call_count == 3  # MAX_RETRIES
 
 
