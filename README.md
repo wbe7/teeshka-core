@@ -12,6 +12,7 @@ See [Master Design Doc](../.gemini/GEMINI.md) for full architecture.
 
 | Method | Path | Description |
 |--------|------|-------------|
+| POST | `/api/v1/query` | Main Teeshka query endpoint |
 | GET | `/api/v1/health` | Liveness probe for K8s |
 | GET | `/api/v1/ready` | Readiness probe (includes Langfuse status) |
 | GET | `/api/v1/docs` | Swagger UI |
@@ -130,6 +131,7 @@ tests/                # Unit and integration tests
 ✅ **Phase 3**: FastAPI Skeleton + Health  
 ✅ **Phase 4**: Settings & Configuration  
 ✅ **Phase 5**: Logging Setup  
-✅ **Phase 7**: Langfuse Integration
+✅ **Phase 7**: Langfuse Integration  
+✅ **Phase 8**: TeeshkaRequest/Response Models
 
 
