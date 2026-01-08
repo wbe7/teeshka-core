@@ -27,12 +27,13 @@ async def delegate_to_agent(
     category: str, session: SessionProtocol, query: str, context: dict
 ) -> TeeshkaResponse:
     """Delegate request to specialized agent with error handling."""
+    trace_id = get_trace_id() or "unknown"
     agent = _agent_registry.get(category.upper())
     if not agent:
         return TeeshkaResponse(
             text="Неизвестная категория запроса",
             agents_used=["router"],
-            trace_id=get_trace_id() or "unknown",
+            trace_id=trace_id,
         )
 
     try:
@@ -40,7 +41,7 @@ async def delegate_to_agent(
         return TeeshkaResponse(
             text=result.text,
             agents_used=["router", agent.name],
-            trace_id=get_trace_id() or "unknown",
+            trace_id=trace_id,
             confirmation_required=result.confirmation,
         )
     except AgentError as e:
@@ -48,5 +49,5 @@ async def delegate_to_agent(
             text=None,
             error=ErrorDetails(code=ErrorCode.INTERNAL_ERROR, message=str(e), retryable=True),
             agents_used=["router", agent.name],
-            trace_id=get_trace_id() or "unknown",
+            trace_id=trace_id,
         )

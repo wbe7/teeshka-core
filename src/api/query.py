@@ -3,7 +3,7 @@
 import uuid_utils
 from fastapi import APIRouter, Depends
 
-from src.agents import EchoLLMClient, RouterAgent, StubSession
+from src.agents import RouterAgent, StubSession
 from src.api.langfuse_client import observe_request
 from src.api.logging import get_logger, get_trace_id
 from src.api.schemas import TeeshkaRequest, TeeshkaResponse
@@ -16,11 +16,6 @@ log = get_logger(__name__)
 def get_router_agent() -> RouterAgent:
     """DI factory for Router Agent."""
     return RouterAgent()
-
-
-def get_llm_client() -> EchoLLMClient:
-    """DI factory for LLM client. Replaced in Phase 10."""
-    return EchoLLMClient()
 
 
 @router.post("/query", response_model=TeeshkaResponse)
@@ -52,4 +47,5 @@ async def query(
         text=result.text,
         agents_used=["router"],
         trace_id=trace_id,
+        confirmation_required=result.confirmation,
     )
