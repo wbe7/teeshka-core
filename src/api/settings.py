@@ -62,9 +62,18 @@ class Settings(BaseSettings):
 
     # === MinIO/S3 (Attachments) ===
     s3_endpoint: str = "http://cloudnative.space:9000"
-    s3_bucket: str = "teeshka-attachments"
+    s3_bucket: str = "teeshka"  # Updated from teeshka-attachments per user request
     s3_access_key: SecretStr
     s3_secret_key: SecretStr
+    s3_region: str = "us-east-1"  # MinIO default
+    s3_presigned_ttl: int = 3600  # 1 hour (GEMINI.md §3.8)
+    s3_small_file_threshold: int = 102400  # 100KB base64 fallback
+
+    # === S3 E2E (separate bucket and credentials, like Langfuse) ===
+    s3_e2e_endpoint: str | None = None
+    s3_e2e_bucket: str = "teeshka-e2e"
+    s3_e2e_access_key: SecretStr | None = None
+    s3_e2e_secret_key: SecretStr | None = None
 
     # === Context Management ===
     model_context_limit: int = 32768

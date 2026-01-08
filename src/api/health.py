@@ -28,12 +28,14 @@ async def ready() -> ReadyResponse:
     Returns OK status with dependency health checks.
     Extended in future phases:
     - Phase 7: Langfuse check
+    - Phase 8b: S3 check
     - Phase 19: PostgreSQL check
     - Phase 20: Redis check
     - Phase 21: Mem0 check
     """
     langfuse_ok = await _check_langfuse()
-    checks = ReadyCheck(langfuse=langfuse_ok)
+    s3_ok = await _check_s3()
+    checks = ReadyCheck(langfuse=langfuse_ok, s3=s3_ok)
     return ReadyResponse(status="ok", checks=checks)
 
 
@@ -48,4 +50,34 @@ async def _check_langfuse() -> bool:
         return await run_in_threadpool(client.auth_check)
     except Exception:
         log.warning("langfuse_health_check_failed", exc_info=True)
+        return False
+
+
+async def _check_s3() -> bool:
+    """Check S3 connectivity via head_bucket.
+
+    Uses a 5-second timeout to prevent hanging when S3 is unavailable.
+    Returns False immediately if S3 is not configured.
+    """
+    import asyncio
+
+    try:
+        from src.api.settings import get_settings
+        from src.storage import S3Client
+
+        settings = get_settings()
+
+        # Skip if S3 credentials not configured
+        if not settings.s3_access_key or not settings.s3_secret_key:
+            log.debug("s3_health_check_skipped", reason="credentials_not_configured")
+            return False
+
+        async with asyncio.timeout(5):  # 5 second timeout
+            async with S3Client() as client:
+                return await client.check_health()
+    except TimeoutError:
+        log.warning("s3_health_check_timeout")
+        return False
+    except Exception:
+        log.warning("s3_health_check_failed", exc_info=True)
         return False

@@ -78,7 +78,7 @@ class TestSettingsDefaults:
 
             # S3 defaults
             assert settings.s3_endpoint == "http://cloudnative.space:9000"
-            assert settings.s3_bucket == "teeshka-attachments"
+            assert settings.s3_bucket == "teeshka"
 
             # Context Management defaults
             assert settings.model_context_limit == 32768
