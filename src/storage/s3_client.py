@@ -178,7 +178,7 @@ class S3Client:
 
         Uses filename suffix first, falls back to content_type guessing.
         """
-        ext = Path(filename).suffix or mimetypes.guess_extension(content_type) or ""
+        ext = (Path(filename).suffix or mimetypes.guess_extension(content_type) or "").lower()
         unique_id = uuid_utils.uuid7()
         return f"attachments/{user_id}/{session_id}/{unique_id}{ext}"
 
@@ -299,7 +299,7 @@ class S3Client:
         try:
             await self._client.head_bucket(Bucket=self._bucket)
             return True
-        except Exception as e:
+        except (ClientError, EndpointConnectionError) as e:
             log.warning("s3_health_check_failed", bucket=self._bucket, error=str(e))
             return False
 

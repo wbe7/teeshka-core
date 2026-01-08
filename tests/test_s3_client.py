@@ -7,15 +7,14 @@ Note: moto doesn't fully support aiobotocore async operations,
 so we mock at the aiobotocore client level instead.
 """
 
-import os
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
 import pytest
 
-# Test credentials - stored as constants
-TEST_AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY_ID", "testing")
-TEST_AWS_SECRET_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "testing")
+# Test credentials - hardcoded constants (intentionally fake for testing)
+TEST_AWS_ACCESS_KEY = "testing"
+TEST_AWS_SECRET_KEY = "testing"  # noqa: S105 - intentional fake credential for unit tests
 TEST_REGION = "us-east-1"
 TEST_BUCKET = "test-bucket"
 
@@ -260,10 +259,17 @@ class TestS3ClientHealthCheck:
 
     async def test_check_health_failure_bucket_missing(self, mock_aiobotocore_session) -> None:
         """Health check returns False when bucket doesn't exist."""
+        from botocore.exceptions import ClientError
+
         mock_session, mock_client = mock_aiobotocore_session
 
-        # Make head_bucket raise an exception
-        mock_client.head_bucket = AsyncMock(side_effect=Exception("NoSuchBucket"))
+        # Make head_bucket raise ClientError (more realistic than generic Exception)
+        mock_client.head_bucket = AsyncMock(
+            side_effect=ClientError(
+                {"Error": {"Code": "NoSuchBucket", "Message": "Bucket not found"}},
+                "HeadBucket",
+            )
+        )
 
         with patch("src.storage.s3_client.get_session", return_value=mock_session):
             from src.storage.s3_client import S3Client
