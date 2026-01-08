@@ -33,7 +33,10 @@ class TestQueryEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert "trace_id" in data
-        assert data["trace_id"]  # Not empty
+        # Validate that trace_id is a valid UUID
+        from uuid import UUID
+
+        UUID(data["trace_id"])  # Raises ValueError if invalid
 
     def test_query_agents_used(self) -> None:
         """Response includes agents_used with router."""

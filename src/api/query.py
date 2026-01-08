@@ -1,5 +1,6 @@
 """Query endpoint - main entry point for Teeshka requests (GEMINI.md §9)."""
 
+import uuid_utils
 from fastapi import APIRouter
 
 from src.api.langfuse_client import observe_request
@@ -21,8 +22,8 @@ async def query(request: TeeshkaRequest) -> TeeshkaResponse:
     """
     trace_id = get_trace_id()
     if trace_id is None:
-        log.warning("trace_id_missing", msg="trace_id not found in request context")
-        trace_id = "unknown"
+        log.error("trace_id_missing", msg="trace_id not found in request context")
+        trace_id = str(uuid_utils.uuid7())
 
     return TeeshkaResponse(
         text=f"Echo: {request.query}",
