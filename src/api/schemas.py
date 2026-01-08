@@ -98,12 +98,14 @@ class ReadyCheck(BaseModel):
 
     Extended in future phases:
     - Phase 7: langfuse
+    - Phase 8b: s3
     - Phase 19: postgres
     - Phase 20: redis
     - Phase 21: mem0
     """
 
     langfuse: bool | None = None
+    s3: bool | None = None
     postgres: bool | None = None
     redis: bool | None = None
     mem0: bool | None = None

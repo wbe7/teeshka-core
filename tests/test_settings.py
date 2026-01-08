@@ -63,7 +63,8 @@ class TestSettingsDefaults:
     def test_settings_default_values(self) -> None:
         """Settings uses correct default values when not overridden."""
         with patch.dict(os.environ, VALID_ENV, clear=True):
-            settings = Settings()
+            # Use _env_file=None to prevent reading local .env file
+            settings = Settings(_env_file=None)
 
             # LLM defaults
             assert settings.llm_base_url == "https://openrouter.ai/api/v1"
@@ -78,7 +79,7 @@ class TestSettingsDefaults:
 
             # S3 defaults
             assert settings.s3_endpoint == "http://cloudnative.space:9000"
-            assert settings.s3_bucket == "teeshka-attachments"
+            assert settings.s3_bucket == "teeshka"
 
             # Context Management defaults
             assert settings.model_context_limit == 32768
