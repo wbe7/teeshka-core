@@ -180,8 +180,8 @@ class TestTeeshkaResponse:
             expires_at=expires,
         )
         data = confirmation.model_dump(mode="json")
-        # ISO8601 format
-        assert "2026-01-07" in data["expires_at"]
+        # Full ISO8601 format assertion
+        assert data["expires_at"] == "2026-01-07T20:00:00Z"
         assert confirmation.code == "BLUE CACTUS"
 
     def test_teeshka_response_with_confirmation(self) -> None:
@@ -193,7 +193,7 @@ class TestTeeshkaResponse:
             confirmation_required=ConfirmationDetails(
                 code="RED DRAGON",
                 action_description="Delete namespace prod",
-                expires_at=datetime.now(UTC),
+                expires_at=datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC),
             ),
         )
         assert response.confirmation_required is not None

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, model_validator
 
@@ -35,7 +35,7 @@ class TeeshkaRequest(BaseModel):
     query: str
     source: Literal["edge", "telegram", "web"]
     user_id: int  # BigInteger compatible (Telegram user ID)
-    context: dict | None = None
+    context: dict[str, Any] | None = None
     attachments: list[Attachment] = []
 
 
