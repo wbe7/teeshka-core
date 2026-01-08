@@ -104,9 +104,12 @@ src/
 │   ├── middleware.py # Request logging middleware
 │   ├── schemas.py    # Pydantic response models
 │   └── settings.py   # Configuration management
+├── storage/
+│   └── s3_client.py  # Async S3 client for attachments
 └── agents/           # PydanticAI agents (future phases)
 
 tests/                # Unit and integration tests
+tests/e2e/            # E2E tests (real services)
 ```
 
 ## Observability
@@ -124,6 +127,24 @@ tests/                # Unit and integration tests
 - `@observe_request` decorator for tracing with trace_id correlation
 - Graceful degradation if Langfuse unavailable
 
+## Attachment Storage (S3)
+
+Async S3/MinIO client for file attachments (images, voice, documents).
+
+**Configuration:**
+- `S3_ENDPOINT` — MinIO endpoint (default: `http://cloudnative.space:9000`)
+- `S3_BUCKET` — Bucket name (default: `teeshka`)
+- `S3_ACCESS_KEY`, `S3_SECRET_KEY` — Credentials
+
+**S3 Key Format:** `attachments/{user_id}/{session_id}/{uuid7}.{ext}`
+
+**Features:**
+- Async upload via `aiobotocore`
+- Presigned URLs for download (TTL: 1 hour)
+- Retry logic with exponential backoff (max 3 attempts)
+- Health check in `/api/v1/ready` endpoint
+- Base64 fallback for files < 100KB (configurable)
+
 ## Status
 
 ✅ **Phase 1**: Project Scaffold  
@@ -132,6 +153,6 @@ tests/                # Unit and integration tests
 ✅ **Phase 4**: Settings & Configuration  
 ✅ **Phase 5**: Logging Setup  
 ✅ **Phase 7**: Langfuse Integration  
-✅ **Phase 8**: TeeshkaRequest/Response Models
-
+✅ **Phase 8**: TeeshkaRequest/Response Models  
+✅ **Phase 8b**: Attachment Storage (S3)
 
