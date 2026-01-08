@@ -5,8 +5,6 @@ These tests connect to real MinIO (teeshka-e2e bucket).
 Run with: pytest -m e2e tests/e2e/test_s3.py
 """
 
-from uuid import uuid4
-
 import httpx
 import pytest
 import uuid_utils
@@ -31,7 +29,7 @@ class TestS3E2E:
         5. Cleanup: delete the file
         """
         user_id = 999999
-        session_id = uuid4()
+        session_id = uuid_utils.uuid7()
 
         # Upload
         key = await e2e_s3_client.upload_attachment(
@@ -70,7 +68,7 @@ class TestS3E2E:
         3. Try to access presigned URL - should fail or return error
         """
         user_id = 888888
-        session_id = uuid4()
+        session_id = uuid_utils.uuid7()
         test_content = b"File to be deleted - " + uuid_utils.uuid7().bytes
 
         # Upload
