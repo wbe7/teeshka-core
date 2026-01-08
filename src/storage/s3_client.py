@@ -91,11 +91,17 @@ class S3Client:
         else:
             self._endpoint = endpoint  # Can be None for moto
 
-        self._bucket = bucket or settings.s3_bucket
-        self._access_key = access_key or settings.s3_access_key.get_secret_value()
-        self._secret_key = secret_key or settings.s3_secret_key.get_secret_value()
-        self._region = region or settings.s3_region
-        self._presigned_ttl = presigned_ttl or settings.s3_presigned_ttl
+        self._bucket = bucket if bucket is not None else settings.s3_bucket
+        self._access_key = (
+            access_key if access_key is not None else settings.s3_access_key.get_secret_value()
+        )
+        self._secret_key = (
+            secret_key if secret_key is not None else settings.s3_secret_key.get_secret_value()
+        )
+        self._region = region if region is not None else settings.s3_region
+        self._presigned_ttl = (
+            presigned_ttl if presigned_ttl is not None else settings.s3_presigned_ttl
+        )
 
         self._session = get_session()
         self._client: S3ClientType | None = None
@@ -164,24 +170,17 @@ class S3Client:
         user_id: int,
         session_id: UUID,
         filename: str,
+        content_type: str,
     ) -> str:
         """Generate S3 key per GEMINI.md §3.8 format.
 
         Format: attachments/{user_id}/{session_id}/{uuid}.{ext}
+
+        Uses filename suffix first, falls back to content_type guessing.
         """
-        ext = Path(filename).suffix or self._guess_extension(filename)
+        ext = Path(filename).suffix or mimetypes.guess_extension(content_type) or ""
         unique_id = uuid_utils.uuid7()
         return f"attachments/{user_id}/{session_id}/{unique_id}{ext}"
-
-    @staticmethod
-    def _guess_extension(filename: str) -> str:
-        """Guess file extension from filename or return empty string."""
-        mime_type, _ = mimetypes.guess_type(filename)
-        if mime_type:
-            ext = mimetypes.guess_extension(mime_type)
-            if ext:
-                return ext
-        return ""
 
     async def upload_attachment(
         self,
@@ -209,7 +208,7 @@ class S3Client:
         if not self._client:
             raise S3Error("S3Client not initialized. Use async context manager.")
 
-        key = self._generate_s3_key(user_id, session_id, filename)
+        key = self._generate_s3_key(user_id, session_id, filename, content_type)
 
         async def _do_upload() -> str:
             await self._client.put_object(
