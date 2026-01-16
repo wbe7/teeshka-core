@@ -19,14 +19,17 @@ class SessionProtocol(Protocol):
 class AgentError(Exception):
     """Base exception for agent failures."""
 
-    pass
+    def __init__(self, message: str, *, retryable: bool = True) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class AgentResult(BaseModel):
     """Standard result from any Teeshka agent."""
 
-    text: str
+    text: str | None = None
     confirmation: ConfirmationDetails | None = None
+    needs_enrichment: str | None = None  # e.g. "MEMORY", "CURRENT_TIME"
 
 
 class BaseAgent(ABC):

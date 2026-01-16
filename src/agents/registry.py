@@ -47,7 +47,9 @@ async def delegate_to_agent(
     except AgentError as e:
         return TeeshkaResponse(
             text=None,
-            error=ErrorDetails(code=ErrorCode.INTERNAL_ERROR, message=str(e), retryable=True),
+            error=ErrorDetails(
+                code=ErrorCode.INTERNAL_ERROR, message=str(e), retryable=e.retryable
+            ),
             agents_used=["router", agent.name],
             trace_id=trace_id,
         )

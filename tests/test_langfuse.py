@@ -24,6 +24,7 @@ VALID_ENV = {
     "GOOGLE_APPLICATION_CREDENTIALS_JSON": "base64_test_json",
     "LANGFUSE_PUBLIC_KEY": "pk-lf-test",
     "LANGFUSE_SECRET_KEY": "sk-lf-test",
+    "LANGFUSE_BASE_URL": "https://test.langfuse.com",
     "S3_ACCESS_KEY": "test_access",
     "S3_SECRET_KEY": "test_secret",
 }
@@ -51,7 +52,7 @@ class TestLangfuseInitialization:
         mock_langfuse.assert_called_once_with(
             public_key="pk-lf-test",
             secret_key="sk-lf-test",  # noqa: S106
-            host="https://langfuse.cloudnative.space",
+            host="https://test.langfuse.com",
         )
 
     @patch("src.api.langfuse_client.Langfuse")
