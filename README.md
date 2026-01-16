@@ -106,7 +106,13 @@ src/
 │   └── settings.py   # Configuration management
 ├── storage/
 │   └── s3_client.py  # Async S3 client for attachments
-└── agents/           # PydanticAI agents (future phases)
+└── agents/
+    ├── base.py       # BaseAgent, AgentResult, SessionProtocol
+    ├── registry.py   # Agent registry (register/delegate)
+    ├── router.py     # Router Agent (echo mode)
+    ├── session.py    # StubSession (until Phase 19)
+    ├── dependencies.py # DI types (LLMClient, RouterDeps)
+    └── llm_client.py # EchoLLMClient (stub)
 
 tests/                # Unit and integration tests
 tests/e2e/            # E2E tests (real services)
@@ -154,5 +160,7 @@ Async S3/MinIO client for file attachments (images, voice, documents).
 ✅ **Phase 5**: Logging Setup  
 ✅ **Phase 7**: Langfuse Integration  
 ✅ **Phase 8**: TeeshkaRequest/Response Models  
-✅ **Phase 8b**: Attachment Storage (S3)
+✅ **Phase 8b**: Attachment Storage (S3)  
+✅ **Phase 9**: Router Agent Base
+
 
