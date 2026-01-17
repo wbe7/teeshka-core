@@ -206,7 +206,7 @@ async def test_retry_on_429_rate_limit(client: OpenRouterClient) -> None:
         result = await client.complete("Test")
 
     assert result == "Success"
-    pass
+    assert sleep_calls == [5.0]
 
 
 @pytest.mark.asyncio

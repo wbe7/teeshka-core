@@ -29,6 +29,18 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --frozen
       - run: uv run pytest tests -v --ignore=tests/e2e --ignore=tests/integration
+        env:
+          ALLOWED_USER_ID: "123456789"
+          POSTGRES_URL: "postgresql+asyncpg://user:pass@localhost:5432/teeshka"
+          REDIS_URL: "redis://localhost:6379/0"
+          GEMINI_GATEWAY_URL: "http://localhost:8080"
+          TELEGRAM_BOT_TOKEN: "test_bot_token"
+          LLM_API_KEY: "test_llm_key"
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: "e30="
+          LANGFUSE_PUBLIC_KEY: "pk-lf-test"
+          LANGFUSE_SECRET_KEY: "sk-lf-test"
+          S3_ACCESS_KEY: "test_access"
+          S3_SECRET_KEY: "test_secret"
 
   test-e2e:
     name: "🤖 E2E Tests"

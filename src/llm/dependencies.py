@@ -1,23 +1,14 @@
 """Dependency injection for LLM client (GEMINI.md §2.6)."""
 
-from functools import lru_cache
+from fastapi import Request
 
-from src.api.settings import get_settings
 from src.llm.client import OpenRouterClient
 
 
-@lru_cache
-def get_llm_client() -> OpenRouterClient:
-    """Get cached OpenRouter client instance (singleton).
+def get_llm_client(request: Request) -> OpenRouterClient:
+    """Get OpenRouter client from application state.
 
-    Returns:
-        OpenRouterClient configured from settings
+    The client is valid for the lifetime of the application
+    and is properly closed on shutdown.
     """
-    settings = get_settings()
-    return OpenRouterClient(
-        base_url=settings.llm_base_url,
-        api_key=settings.llm_api_key.get_secret_value(),
-        model=settings.llm_model,
-        timeout=settings.llm_timeout,
-        max_retries=settings.llm_max_retries,
-    )
+    return request.app.state.llm_client

@@ -13,9 +13,16 @@ import httpx
 class LLMError(Exception):
     """Base exception for LLM client errors."""
 
-    def __init__(self, message: str, *, retryable: bool = True) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        retryable: bool = True,
+        retry_after: float | None = None,
+    ) -> None:
         super().__init__(message)
         self.retryable = retryable
+        self.retry_after = retry_after
 
 
 class LLMTimeoutError(LLMError):
@@ -104,6 +111,10 @@ class OpenRouterClient:
                 last_exception = e
                 # Exponential backoff: 1s, 2s, 4s
                 delay = 2**attempt
+                # Respect explicit Retry-After if provided
+                if getattr(e, "retry_after", None) is not None:
+                    delay = e.retry_after
+
                 await asyncio.sleep(delay)
 
         # All retries exhausted
@@ -137,23 +148,14 @@ class OpenRouterClient:
         if response.status_code == 429:
             # Rate limit - retryable
             retry_after_header = response.headers.get("Retry-After")
-            # Default delay from parsing
+            retry_after_val: float | None = None
             delay_msg = "unknown"
 
             if retry_after_header:
                 try:
                     # Retry-After can be integer seconds
-                    delay_seconds = int(retry_after_header)
-                    # We don't sleep here, we raise error and let loop sleep?
-                    # The loop uses exponential backoff.
-                    # Ideally we should respect Retry-After.
-                    # But our Architecture says "Exponential Backoff".
-                    # Review says "use it for asyncio.sleep".
-                    # So we should pass this info up or sleep here?
-                    # The loop catches LLMError and determines sleep.
-                    # We can add `retry_after` attr to LLMError? No, base class.
-                    # Or we just format message correctly as requested.
-                    delay_msg = f"{delay_seconds}s"
+                    retry_after_val = float(retry_after_header)
+                    delay_msg = f"{retry_after_val}s"
                 except ValueError:
                     # Date format - ignore complexity for now, fallback to string
                     delay_msg = retry_after_header
@@ -161,6 +163,7 @@ class OpenRouterClient:
             raise LLMError(
                 f"Rate limited (429). Retry-After: {delay_msg}",
                 retryable=True,
+                retry_after=retry_after_val,
             )
         elif 400 <= response.status_code < 500:
             # Client error - not retryable
