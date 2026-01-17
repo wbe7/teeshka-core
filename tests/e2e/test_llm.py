@@ -6,26 +6,40 @@
 - test_openrouter_response_structure
 
 Requirements:
-- LLM_API_KEY set in .env (OpenRouter API key)
+- LLM_API_KEY set in environment (OpenRouter API key)
 - Free tier model: nvidia/nemotron-3-nano-30b-a3b:free
 """
 
+import os
+
 import pytest
 
-from src.api.settings import get_settings
 from src.llm.client import OpenRouterClient
+
+# Default values matching settings.py
+DEFAULT_LLM_BASE_URL = "https://openrouter.ai/api/v1"
+DEFAULT_LLM_MODEL = "nvidia/nemotron-3-nano-30b-a3b:free"
+DEFAULT_LLM_TIMEOUT = 30.0
+DEFAULT_LLM_MAX_RETRIES = 3
 
 
 @pytest.fixture
 def real_client() -> OpenRouterClient:
-    """Create OpenRouter client with real API key from settings."""
-    settings = get_settings()
+    """Create OpenRouter client from environment variables.
+
+    Uses LLM_API_KEY from env directly to avoid loading full Settings
+    which requires all env vars (postgres, redis, etc.).
+    """
+    api_key = os.environ.get("LLM_API_KEY")
+    if not api_key:
+        pytest.skip("LLM_API_KEY not set in environment")
+
     return OpenRouterClient(
-        base_url=settings.llm_base_url,
-        api_key=settings.llm_api_key.get_secret_value(),
-        model=settings.llm_model,
-        timeout=settings.llm_timeout,
-        max_retries=settings.llm_max_retries,
+        base_url=os.environ.get("LLM_BASE_URL", DEFAULT_LLM_BASE_URL),
+        api_key=api_key,
+        model=os.environ.get("LLM_MODEL", DEFAULT_LLM_MODEL),
+        timeout=float(os.environ.get("LLM_TIMEOUT", DEFAULT_LLM_TIMEOUT)),
+        max_retries=int(os.environ.get("LLM_MAX_RETRIES", DEFAULT_LLM_MAX_RETRIES)),
     )
 
 
