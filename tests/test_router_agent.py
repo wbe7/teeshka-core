@@ -9,7 +9,7 @@ import pytest
 from src.agents import (
     AgentError,
     AgentResult,
-    EchoLLMClient,
+    MockLLMClient,
     RouterAgent,
     StubSession,
     clear_registry,
@@ -51,23 +51,23 @@ def test_agent_result_serialization() -> None:
     assert data["confirmation"] is None
 
 
-# === Test EchoLLMClient ===
+# === Test MockLLMClient ===
 
 
 @pytest.mark.asyncio
-async def test_echo_llm_client_complete() -> None:
-    """Test EchoLLMClient returns echo response."""
-    client = EchoLLMClient()
+async def test_mock_llm_client_complete() -> None:
+    """Test MockLLMClient returns mock response."""
+    client = MockLLMClient()
     response = await client.complete("test prompt")
-    assert response == "[ECHO] test prompt"
+    assert response == "[MOCK] test prompt"
 
 
 @pytest.mark.asyncio
-async def test_echo_llm_client_with_system() -> None:
-    """Test EchoLLMClient ignores system prompt in echo mode."""
-    client = EchoLLMClient()
+async def test_mock_llm_client_with_system() -> None:
+    """Test MockLLMClient ignores system prompt in mock mode."""
+    client = MockLLMClient()
     response = await client.complete("query", system="You are a helpful assistant")
-    assert response == "[ECHO] query"
+    assert response == "[MOCK] query"
 
 
 # === Test StubSession ===

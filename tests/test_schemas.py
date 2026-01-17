@@ -115,10 +115,11 @@ class TestErrorModels:
     """Tests for ErrorCode and ErrorDetails models."""
 
     def test_error_code_enum_values(self) -> None:
-        """ErrorCode has all 7 expected values."""
+        """ErrorCode has all 8 expected values."""
         expected = {
             "K8S_CONNECTION_ERROR",
             "LLM_TIMEOUT",
+            "LLM_RATE_LIMIT",  # Phase 10: OpenRouter 429
             "MEM0_UNAVAILABLE",
             "CONFIRMATION_EXPIRED",
             "CONFIRMATION_INVALID",

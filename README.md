@@ -63,6 +63,23 @@ Configuration is managed via environment variables using `pydantic-settings`.
 - `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`
 - `S3_ACCESS_KEY`, `S3_SECRET_KEY`
 
+## LLM Client (OpenRouter)
+
+Async HTTP client for OpenRouter API with OpenAI-compatible interface.
+
+**Configuration:**
+- `LLM_BASE_URL` — API endpoint (default: `https://openrouter.ai/api/v1`)
+- `LLM_MODEL` — Model identifier (default: `nvidia/nemotron-3-nano-30b-a3b:free`)
+- `LLM_API_KEY` — OpenRouter API key (required)
+- `LLM_TIMEOUT` — Request timeout in seconds (default: `30.0`)
+- `LLM_MAX_RETRIES` — Max retry attempts (default: `3`)
+
+**Features:**
+- Retry logic with exponential backoff (1s, 2s, 4s)
+- Retryable: 5xx errors, timeouts, connection errors, 429 rate limits
+- Non-retryable: 4xx client errors (400, 401, 403, 404)
+- Configurable timeout per request
+
 ## Logging
 
 Structured JSON logging via `structlog` for K8s/Loki/ELK compatibility.
@@ -95,7 +112,6 @@ curl http://localhost:8000/api/v1/health
 
 ## Project Structure
 
-```
 src/
 ├── api/
 │   ├── main.py       # FastAPI application + lifespan
@@ -106,16 +122,19 @@ src/
 │   └── settings.py   # Configuration management
 ├── storage/
 │   └── s3_client.py  # Async S3 client for attachments
+├── llm/
+│   ├── client.py     # OpenRouterClient (async httpx)
+│   └── dependencies.py # get_llm_client() factory
 └── agents/
     ├── base.py       # BaseAgent, AgentResult, SessionProtocol
     ├── registry.py   # Agent registry (register/delegate)
     ├── router.py     # Router Agent (echo mode)
     ├── session.py    # StubSession (until Phase 19)
-    ├── dependencies.py # DI types (LLMClient, RouterDeps)
-    └── llm_client.py # EchoLLMClient (stub)
+    └── dependencies.py # DI types (LLMClient, RouterDeps)
 
-tests/                # Unit and integration tests
+tests/                # Unit tests
 tests/e2e/            # E2E tests (real services)
+tests/integration/    # Integration tests (requires Docker)
 ```
 
 ## Observability
@@ -161,6 +180,7 @@ Async S3/MinIO client for file attachments (images, voice, documents).
 ✅ **Phase 7**: Langfuse Integration  
 ✅ **Phase 8**: TeeshkaRequest/Response Models  
 ✅ **Phase 8b**: Attachment Storage (S3)  
-✅ **Phase 9**: Router Agent Base
+✅ **Phase 9**: Router Agent Base  
+✅ **Phase 10**: LLM Client (OpenRouter)
 
 
