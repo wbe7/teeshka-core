@@ -36,6 +36,11 @@ def e2e_langfuse_client() -> Langfuse:
     if not public_key or not secret_key:
         pytest.skip("LANGFUSE_E2E_PUBLIC_KEY and/or LANGFUSE_E2E_SECRET_KEY not set")
 
+    # Set standard Langfuse env vars so @observe decorator works with E2E project
+    os.environ["LANGFUSE_PUBLIC_KEY"] = public_key
+    os.environ["LANGFUSE_SECRET_KEY"] = secret_key
+    os.environ["LANGFUSE_HOST"] = base_url
+
     client = Langfuse(
         public_key=public_key,
         secret_key=secret_key,
@@ -82,6 +87,7 @@ async def e2e_s3_client():
         access_key=access_key,
         secret_key=secret_key,
         region=region,
+        presigned_ttl=3600,  # Explicit TTL to avoid calling get_settings()
     )
 
     async with client:
