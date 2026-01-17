@@ -91,7 +91,9 @@ def observe_request[F: Callable](func: F) -> F:
 
         try:
             langfuse = get_client()
-            langfuse.update_current_trace(id=trace_id)
+            # We cannot update the trace ID after creation, but we can add the
+            # request trace_id as a tag for correlation.
+            langfuse.update_current_trace(tags=[trace_id])
         except Exception:
             log.warning("langfuse_trace_update_failed", trace_id=trace_id, exc_info=True)
 
