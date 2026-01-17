@@ -18,9 +18,9 @@ from src.llm.client import OpenRouterClient
 
 # Default values matching settings.py
 DEFAULT_LLM_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_LLM_MODEL = "nvidia/nemotron-3-nano-30b-a3b:free"
+DEFAULT_LLM_MODEL = "google/gemini-2.0-flash-exp:free"
 DEFAULT_LLM_TIMEOUT = 30.0
-DEFAULT_LLM_MAX_RETRIES = 3
+DEFAULT_LLM_MAX_RETRIES = 7
 
 
 @pytest.fixture

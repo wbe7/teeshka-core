@@ -578,3 +578,62 @@ async def test_model_parameter_in_request(client: OpenRouterClient) -> None:
     call_args = client._client.post.call_args
     payload = call_args.kwargs["json"]
     assert payload["model"] == "test-model"
+
+
+# === Robustness Tests (Round 3) ===
+
+
+@pytest.mark.asyncio
+async def test_retry_after_http_date(client: OpenRouterClient) -> None:
+    """Test parsing of HTTP-date format in Retry-After header."""
+    # Fri, 31 Dec 2025 12:00:00 GMT
+    http_date = "Fri, 31 Dec 2025 12:00:05 GMT"
+    # Corresponding static time: Fri, 31 Dec 2025 12:00:00 GMT
+    # Difference = 5 seconds
+
+    # We patch datetime in the client module to control "now"
+    # Note: parsedate_to_datetime returns timezone-aware UTC datetime
+
+    # Mock response
+    response = MagicMock(spec=httpx.Response)
+    response.status_code = 429
+    response.headers = httpx.Headers({"Retry-After": http_date})
+
+    # Mock client to return 429 then success
+    success_response = make_response(content="After wait")
+    client._client.post = AsyncMock(side_effect=[response, success_response])
+
+    from datetime import timezone
+    from email.utils import parsedate_to_datetime as parse
+
+    fixed_now = parse("Fri, 31 Dec 2025 12:00:00 GMT")
+
+    with (
+        patch("src.llm.client.datetime") as mock_dt,
+        patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+    ):
+        mock_dt.now.return_value = fixed_now
+        # We need to ensure timezone is passed correctly if code uses it
+        mock_dt.timezone = timezone
+
+        result = await client.complete("Test")
+
+    assert result == "After wait"
+    # Should sleep 5.0 seconds
+    mock_sleep.assert_called_with(5.0)
+
+
+@pytest.mark.asyncio
+async def test_invalid_content_type(client: OpenRouterClient) -> None:
+    """Test response with non-string content (e.g. integer)."""
+    response = MagicMock(spec=httpx.Response)
+    response.status_code = 200
+    # Content is integer, not string
+    response.json.return_value = {"choices": [{"message": {"content": 123}}]}
+
+    client._client.post = AsyncMock(return_value=response)
+
+    with pytest.raises(LLMError) as exc_info:
+        await client.complete("Test")
+
+    assert "Unexpected content type: int" in str(exc_info.value)

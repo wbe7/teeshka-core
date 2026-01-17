@@ -5,6 +5,8 @@ Error handling follows GEMINI.md §3.6 patterns.
 """
 
 import asyncio
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -158,8 +160,16 @@ class OpenRouterClient:
                     retry_after_val = float(retry_after_header)
                     delay_msg = f"{retry_after_val}s"
                 except ValueError:
-                    # Date format - ignore complexity for now, fallback to string
-                    delay_msg = retry_after_header
+                    # It might be an HTTP-date
+                    try:
+                        retry_dt = parsedate_to_datetime(retry_after_header)
+                        now_dt = datetime.now(UTC)
+                        # Ensure delay is non-negative
+                        retry_after_val = max(0.0, (retry_dt - now_dt).total_seconds())
+                        delay_msg = retry_after_header
+                    except (TypeError, ValueError):
+                        # Fallback if date parsing fails
+                        delay_msg = retry_after_header
 
             raise LLMError(
                 f"Rate limited (429). Retry-After: {delay_msg}",
@@ -190,10 +200,18 @@ class OpenRouterClient:
             choices = data.get("choices", [])
             if not choices:
                 raise LLMError("Empty choices array in response", retryable=False)
-            content = choices[0].get("message", {}).get("content")
+            message = choices[0].get("message", {})
+            content = message.get("content")
+
             if content is None:
                 raise LLMError("Missing content in response", retryable=False)
-            if isinstance(content, str) and content.strip() == "":
+
+            if not isinstance(content, str):
+                raise LLMError(
+                    f"Unexpected content type: {type(content).__name__}", retryable=False
+                )
+
+            if content.strip() == "":
                 # Whitespace-only content is valid but empty
                 return content
             return content
