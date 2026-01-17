@@ -67,7 +67,9 @@ async def test_openrouter_with_system_prompt(real_client: OpenRouterClient) -> N
     assert isinstance(result, str)
     assert len(result) > 0
     # Response should contain some Russian characters or words
-    # This is a soft check - model may not perfectly follow instructions
+    # Check for Cyrillic unicode range (U+0400 to U+04FF)
+    has_cyrillic = any("\u0400" <= char <= "\u04ff" for char in result)
+    assert has_cyrillic, f"Response should contain Russian characters. Got: {result}"
 
 
 @pytest.mark.e2e

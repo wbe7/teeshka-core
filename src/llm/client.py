@@ -115,7 +115,8 @@ class OpenRouterClient:
                 if getattr(e, "retry_after", None) is not None:
                     delay = e.retry_after
 
-                await asyncio.sleep(delay)
+                if attempt < self.max_retries:
+                    await asyncio.sleep(delay)
 
         # All retries exhausted
         raise LLMError(
