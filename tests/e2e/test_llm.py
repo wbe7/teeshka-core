@@ -52,7 +52,7 @@ async def test_openrouter_real_completion(real_client: OpenRouterClient) -> None
     assert isinstance(result, str)
     assert len(result) > 0
     # Model should respond with something containing "Hello"
-    assert "hello" in result.lower() or len(result) > 0
+    assert "hello" in result.lower()
 
 
 @pytest.mark.e2e

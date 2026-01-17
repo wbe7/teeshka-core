@@ -1,6 +1,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 @pytest.fixture(autouse=True)
@@ -21,3 +24,14 @@ def mock_langfuse_for_unit_tests(request):
         mock_instance = MagicMock()
         MockLangfuse.return_value = mock_instance
         yield mock_instance
+
+
+@pytest.fixture
+def client():
+    """Test client with application lifespan support."""
+    from fastapi.testclient import TestClient
+
+    from src.api.main import app
+
+    with TestClient(app) as c:
+        yield c

@@ -15,12 +15,9 @@ test-integration:
 	uv run pytest tests/integration -v --tb=short
 
 test-e2e:
-	uv run pytest tests/e2e -v --tb=short
+	uv run pytest tests/e2e -v -m e2e --tb=short
 
-test-all:
-	$(MAKE) test
-	$(MAKE) test-integration
-	$(MAKE) test-e2e
+test-all: test test-integration test-e2e
 
 run:
 	uv run fastapi dev src/api/main.py

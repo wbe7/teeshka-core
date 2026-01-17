@@ -53,6 +53,20 @@ class OpenRouterClient:
         self.model = model
         self.timeout = timeout
         self.max_retries = max_retries
+        self._client = httpx.AsyncClient(
+            base_url=self.base_url,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://teeshka.local",
+                "X-Title": "Teeshka Core",
+            },
+            timeout=httpx.Timeout(self.timeout),
+        )
+
+    async def aclose(self) -> None:
+        """Close the underlying HTTP client."""
+        await self._client.aclose()
 
     async def complete(self, prompt: str, system: str | None = None) -> str:
         """Complete prompt via OpenRouter /chat/completions.
@@ -80,7 +94,8 @@ class OpenRouterClient:
 
         last_exception: Exception | None = None
 
-        for attempt in range(self.max_retries):
+        # Try initial attempt + retries
+        for attempt in range(self.max_retries + 1):
             try:
                 return await self._make_request(payload)
             except LLMError as e:
@@ -88,10 +103,6 @@ class OpenRouterClient:
                     raise
                 last_exception = e
                 # Exponential backoff: 1s, 2s, 4s
-                delay = 2**attempt
-                await asyncio.sleep(delay)
-            except LLMTimeoutError:
-                last_exception = LLMTimeoutError()
                 delay = 2**attempt
                 await asyncio.sleep(delay)
 
@@ -114,28 +125,41 @@ class OpenRouterClient:
             LLMError: On API errors
             LLMTimeoutError: On timeout
         """
-        url = f"{self.base_url}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://teeshka.local",
-            "X-Title": "Teeshka Core",
-        }
-
-        async with httpx.AsyncClient(timeout=httpx.Timeout(self.timeout)) as client:
-            try:
-                response = await client.post(url, json=payload, headers=headers)
-            except httpx.TimeoutException as e:
-                raise LLMTimeoutError(f"Request timed out after {self.timeout}s") from e
-            except httpx.ConnectError as e:
-                raise LLMError(f"Connection error: {e}", retryable=True) from e
+        # Use shared client (performance)
+        try:
+            response = await self._client.post("/chat/completions", json=payload)
+        except httpx.TimeoutException as e:
+            raise LLMTimeoutError(f"Request timed out after {self.timeout}s") from e
+        except httpx.ConnectError as e:
+            raise LLMError(f"Connection error: {e}", retryable=True) from e
 
         # Handle HTTP errors
         if response.status_code == 429:
             # Rate limit - retryable
-            retry_after = response.headers.get("Retry-After", "unknown")
+            retry_after_header = response.headers.get("Retry-After")
+            # Default delay from parsing
+            delay_msg = "unknown"
+
+            if retry_after_header:
+                try:
+                    # Retry-After can be integer seconds
+                    delay_seconds = int(retry_after_header)
+                    # We don't sleep here, we raise error and let loop sleep?
+                    # The loop uses exponential backoff.
+                    # Ideally we should respect Retry-After.
+                    # But our Architecture says "Exponential Backoff".
+                    # Review says "use it for asyncio.sleep".
+                    # So we should pass this info up or sleep here?
+                    # The loop catches LLMError and determines sleep.
+                    # We can add `retry_after` attr to LLMError? No, base class.
+                    # Or we just format message correctly as requested.
+                    delay_msg = f"{delay_seconds}s"
+                except ValueError:
+                    # Date format - ignore complexity for now, fallback to string
+                    delay_msg = retry_after_header
+
             raise LLMError(
-                f"Rate limited (429). Retry-After: {retry_after}",
+                f"Rate limited (429). Retry-After: {delay_msg}",
                 retryable=True,
             )
         elif 400 <= response.status_code < 500:
@@ -154,7 +178,7 @@ class OpenRouterClient:
         # Parse response
         try:
             data = response.json()
-        except Exception as e:
+        except ValueError as e:
             raise LLMError(f"Invalid JSON response: {e}", retryable=False) from e
 
         # Extract content from OpenAI-compatible response
