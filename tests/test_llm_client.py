@@ -412,7 +412,7 @@ async def test_empty_choices_array(client: OpenRouterClient) -> None:
     with pytest.raises(LLMError) as exc_info:
         await client.complete("Test")
 
-    assert "Empty choices" in str(exc_info.value)
+    assert "Empty or invalid 'choices'" in str(exc_info.value)
     assert exc_info.value.retryable is False
 
 
@@ -428,7 +428,7 @@ async def test_missing_content_field(client: OpenRouterClient) -> None:
     with pytest.raises(LLMError) as exc_info:
         await client.complete("Test")
 
-    assert "Missing content" in str(exc_info.value)
+    assert "Missing 'content'" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -459,7 +459,7 @@ async def test_unexpected_response_structure(client: OpenRouterClient) -> None:
     with pytest.raises(LLMError) as exc_info:
         await client.complete("Test")
 
-    assert "Empty choices" in str(exc_info.value)
+    assert "Empty or invalid 'choices'" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -474,7 +474,7 @@ async def test_null_content_value(client: OpenRouterClient) -> None:
     with pytest.raises(LLMError) as exc_info:
         await client.complete("Test")
 
-    assert "Missing content" in str(exc_info.value)
+    assert "Missing 'content'" in str(exc_info.value)
 
 
 @pytest.mark.asyncio

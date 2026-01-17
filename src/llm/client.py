@@ -111,8 +111,8 @@ class OpenRouterClient:
                 if not e.retryable:
                     raise
                 last_exception = e
-                # Exponential backoff: 1s, 2s, 4s
-                delay = 2**attempt
+                # Exponential backoff: 1s, 2s, 4s (capped at 30s)
+                delay = min(30, 2**attempt)
                 # Respect explicit Retry-After if provided
                 if getattr(e, "retry_after", None) is not None:
                     delay = e.retry_after
@@ -196,24 +196,22 @@ class OpenRouterClient:
             raise LLMError(f"Invalid JSON response: {e}", retryable=False) from e
 
         # Extract content from OpenAI-compatible response
-        try:
-            choices = data.get("choices", [])
-            if not choices:
-                raise LLMError("Empty choices array in response", retryable=False)
-            message = choices[0].get("message", {})
-            content = message.get("content")
+        choices = data.get("choices")
+        if not isinstance(choices, list) or not choices:
+            raise LLMError("Empty or invalid 'choices' in response", retryable=False)
 
-            if content is None:
-                raise LLMError("Missing content in response", retryable=False)
+        message = choices[0].get("message")
+        if not isinstance(message, dict):
+            raise LLMError("Invalid 'message' object in response", retryable=False)
 
-            if not isinstance(content, str):
-                raise LLMError(
-                    f"Unexpected content type: {type(content).__name__}", retryable=False
-                )
+        content = message.get("content")
+        if content is None:
+            raise LLMError("Missing 'content' in response", retryable=False)
 
-            if content.strip() == "":
-                # Whitespace-only content is valid but empty
-                return content
+        if not isinstance(content, str):
+            raise LLMError(f"Unexpected content type: {type(content).__name__}", retryable=False)
+
+        if content.strip() == "":
+            # Whitespace-only content is valid but empty
             return content
-        except (KeyError, IndexError, TypeError) as e:
-            raise LLMError(f"Unexpected response structure: {e}", retryable=False) from e
+        return content
