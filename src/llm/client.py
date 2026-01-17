@@ -114,7 +114,7 @@ class OpenRouterClient:
                 # Exponential backoff: 1s, 2s, 4s (capped at 30s)
                 delay = min(30, 2**attempt)
                 # Respect explicit Retry-After if provided
-                if getattr(e, "retry_after", None) is not None:
+                if e.retry_after is not None:
                     delay = e.retry_after
 
                 if attempt < self.max_retries:
