@@ -144,8 +144,8 @@ class OpenRouterClient:
             response = await self._client.post("/chat/completions", json=payload)
         except httpx.TimeoutException as e:
             raise LLMTimeoutError(f"Request timed out after {self.timeout}s") from e
-        except httpx.ConnectError as e:
-            raise LLMError(f"Connection error: {e}", retryable=True) from e
+        except httpx.NetworkError as e:
+            raise LLMError(f"Network error: {e}", retryable=True) from e
 
         # Handle HTTP errors
         if response.status_code == 429:
@@ -200,7 +200,13 @@ class OpenRouterClient:
         if not isinstance(choices, list) or not choices:
             raise LLMError("Empty or invalid 'choices' in response", retryable=False)
 
-        message = choices[0].get("message")
+        first_choice = choices[0]
+        if not isinstance(first_choice, dict):
+            raise LLMError(
+                f"Invalid item in 'choices': expected dict, got {type(first_choice).__name__}",
+                retryable=False,
+            )
+        message = first_choice.get("message")
         if not isinstance(message, dict):
             raise LLMError("Invalid 'message' object in response", retryable=False)
 

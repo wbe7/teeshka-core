@@ -172,13 +172,13 @@ async def test_retry_on_timeout_exception(client: OpenRouterClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_retry_on_connect_error(client: OpenRouterClient) -> None:
-    """Test retries on httpx.ConnectError."""
+async def test_retry_on_network_error(client: OpenRouterClient) -> None:
+    """Test retries on httpx.NetworkError (e.g. ReadError)."""
     success_response = make_response(content="Connected")
 
     client._client.post = AsyncMock(
         side_effect=[
-            httpx.ConnectError("Connection refused"),
+            httpx.ReadError("Connection parsing failed"),
             success_response,
         ]
     )
@@ -637,3 +637,19 @@ async def test_invalid_content_type(client: OpenRouterClient) -> None:
         await client.complete("Test")
 
     assert "Unexpected content type: int" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_invalid_choice_item_type(client: OpenRouterClient) -> None:
+    """Test response with non-dict choice item."""
+    response = MagicMock(spec=httpx.Response)
+    response.status_code = 200
+    # choices contains integer, not dict
+    response.json.return_value = {"choices": [123]}
+
+    client._client.post = AsyncMock(return_value=response)
+
+    with pytest.raises(LLMError) as exc_info:
+        await client.complete("Test")
+
+    assert "Invalid item in 'choices': expected dict" in str(exc_info.value)
