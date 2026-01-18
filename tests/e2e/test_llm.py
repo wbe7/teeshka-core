@@ -83,3 +83,25 @@ async def test_openrouter_response_structure(real_client: OpenRouterClient) -> N
     assert len(result.strip()) > 0
     # Should contain the number 4 somewhere in response
     assert "4" in result or "four" in result.lower()
+
+
+@pytest.mark.e2e
+@pytest.mark.asyncio
+async def test_openrouter_with_system_prompt_pirate(real_client: OpenRouterClient) -> None:
+    """Test system prompt affects response (Pirate Persona).
+
+    Alternative stability test for smaller models that might ignore
+    strict language instructions (like 'speak Russian').
+    """
+    result = await real_client.complete(
+        "Hello friend.",
+        system="You are a pirate. Always speak like a pirate.",
+    )
+
+    assert isinstance(result, str)
+    assert len(result) > 0
+    # Response should contain pirate slang
+    pirate_words = ["ahoy", "matey", "arrr", "yer", "ship", "captain"]
+    # Check if any pirate word is in the result (case insensitive)
+    is_pirate = any(word in result.lower() for word in pirate_words)
+    assert is_pirate, f"Response should be pirate-themed. Got: {result}"
