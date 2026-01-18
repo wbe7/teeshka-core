@@ -69,7 +69,7 @@ Async HTTP client for OpenRouter API with OpenAI-compatible interface.
 
 **Configuration:**
 - `LLM_BASE_URL` — API endpoint (default: `https://openrouter.ai/api/v1`)
-- `LLM_MODEL` — Model identifier (default: `nvidia/nemotron-3-nano-30b-a3b:free`)
+- **LLM_MODEL** — Model identifier (default: `nvidia/nemotron-3-nano-30b-a3b`)
 - `LLM_API_KEY` — OpenRouter API key (required)
 - `LLM_TIMEOUT` — Request timeout in seconds (default: `30.0`)
 - `LLM_MAX_RETRIES` — Max retry attempts (default: `3`)

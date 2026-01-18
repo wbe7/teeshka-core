@@ -7,7 +7,7 @@
 
 Requirements:
 - LLM_API_KEY set in environment (OpenRouter API key)
-- Free tier model: nvidia/nemotron-3-nano-30b-a3b:free
+# - Default model: nvidia/nemotron-3-nano-30b-a3b
 """
 
 import os
@@ -47,7 +47,7 @@ def real_client() -> OpenRouterClient:
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_openrouter_real_completion(real_client: OpenRouterClient) -> None:
-    """Test real OpenRouter API call with free tier model."""
+    """Test real OpenRouter API call with configured model."""
     result = await real_client.complete("Say 'Hello' and nothing else.")
 
     assert isinstance(result, str)
