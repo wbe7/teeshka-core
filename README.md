@@ -62,6 +62,7 @@ Configuration is managed via environment variables using `pydantic-settings`.
 - `TELEGRAM_BOT_TOKEN`, `LLM_API_KEY`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`
 - `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`
 - `S3_ACCESS_KEY`, `S3_SECRET_KEY`
+- `LLM_E2E_API_KEY` (optional, for E2E tests)
 
 ## LLM Client (OpenRouter)
 
@@ -79,6 +80,16 @@ Async HTTP client for OpenRouter API with OpenAI-compatible interface.
 - Retryable: 5xx errors, timeouts, connection errors, 429 rate limits
 - Non-retryable: 4xx client errors (400, 401, 403, 404)
 - Configurable timeout per request
+
+**Usage:**
+```python
+from src.llm.dependencies import get_llm_client
+
+async def generate_text(prompt: str):
+    client = get_llm_client()  # Singleton
+    response = await client.complete(prompt, system="You are helpful.")
+    return response
+```
 
 ## Logging
 
