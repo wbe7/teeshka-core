@@ -10,6 +10,9 @@ from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
+from pydantic import ValidationError
+
+from src.llm.schemas import CompletionResponse
 
 
 class LLMError(Exception):
@@ -195,29 +198,9 @@ class OpenRouterClient:
         except ValueError as e:
             raise LLMError(f"Invalid JSON response: {e}", retryable=False) from e
 
-        # Extract content from OpenAI-compatible response
-        choices = data.get("choices")
-        if not isinstance(choices, list) or not choices:
-            raise LLMError("Empty or invalid 'choices' in response", retryable=False)
+        try:
+            parsed_response = CompletionResponse.model_validate(data)
+        except ValidationError as e:
+            raise LLMError(f"Invalid response structure: {e}", retryable=False) from e
 
-        first_choice = choices[0]
-        if not isinstance(first_choice, dict):
-            raise LLMError(
-                f"Invalid item in 'choices': expected dict, got {type(first_choice).__name__}",
-                retryable=False,
-            )
-        message = first_choice.get("message")
-        if not isinstance(message, dict):
-            raise LLMError("Invalid 'message' object in response", retryable=False)
-
-        content = message.get("content")
-        if content is None:
-            raise LLMError("Missing 'content' in response", retryable=False)
-
-        if not isinstance(content, str):
-            raise LLMError(f"Unexpected content type: {type(content).__name__}", retryable=False)
-
-        if content.strip() == "":
-            # Whitespace-only content is valid but empty
-            return content
-        return content
+        return parsed_response.choices[0].message.content
