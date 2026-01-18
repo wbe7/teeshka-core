@@ -54,6 +54,7 @@ jobs:
         env:
           # Required secrets for E2E tests
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_E2E_API_KEY: ${{ secrets.LLM_E2E_API_KEY }}
           LANGFUSE_E2E_PUBLIC_KEY: ${{ secrets.LANGFUSE_E2E_PUBLIC_KEY }}
           LANGFUSE_E2E_SECRET_KEY: ${{ secrets.LANGFUSE_E2E_SECRET_KEY }}
           S3_E2E_ENDPOINT: ${{ secrets.S3_E2E_ENDPOINT }}
