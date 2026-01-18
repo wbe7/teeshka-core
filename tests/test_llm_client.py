@@ -255,7 +255,7 @@ async def test_max_retries_exceeded_raises(client: OpenRouterClient) -> None:
         await client.complete("Test")
 
     assert "Max retries (3) exceeded" in str(exc_info.value)
-    assert exc_info.value.retryable is True
+    assert exc_info.value.retryable is False
     # max_retries + 1 = 4 calls
     assert client._client.post.call_count == 4
 
@@ -363,7 +363,7 @@ async def test_timeout_raises_llm_timeout_error(client: OpenRouterClient) -> Non
         await client.complete("Test")
 
     # After retries exhausted, we get LLMError wrapping the timeout
-    assert exc_info.value.retryable is True
+    assert exc_info.value.retryable is False
 
 
 @pytest.mark.asyncio

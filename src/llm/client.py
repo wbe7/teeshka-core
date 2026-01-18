@@ -126,7 +126,7 @@ class OpenRouterClient:
         # All retries exhausted
         raise LLMError(
             f"Max retries ({self.max_retries}) exceeded. Last error: {last_exception}",
-            retryable=True,
+            retryable=False,
         ) from last_exception
 
     async def _make_request(self, payload: dict[str, Any]) -> str:
@@ -160,7 +160,7 @@ class OpenRouterClient:
             if retry_after_header:
                 try:
                     # Retry-After can be integer seconds
-                    retry_after_val = float(retry_after_header)
+                    retry_after_val = max(0.0, float(retry_after_header))
                     delay_msg = f"{retry_after_val}s"
                 except ValueError:
                     # It might be an HTTP-date
@@ -182,13 +182,13 @@ class OpenRouterClient:
         elif 400 <= response.status_code < 500:
             # Client error - not retryable
             raise LLMError(
-                f"Client error ({response.status_code}): {response.text}",
+                f"Client error ({response.status_code}): {response.text[:500]}",
                 retryable=False,
             )
         elif response.status_code >= 500:
             # Server error - retryable
             raise LLMError(
-                f"Server error ({response.status_code}): {response.text}",
+                f"Server error ({response.status_code}): {response.text[:500]}",
                 retryable=True,
             )
 
