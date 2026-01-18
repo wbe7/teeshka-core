@@ -14,13 +14,14 @@ import os
 
 import pytest
 
+# Default values matching settings.py
+from src.api.settings import Settings
 from src.llm.client import OpenRouterClient
 
-# Default values matching settings.py
-DEFAULT_LLM_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_LLM_MODEL = "google/gemini-2.0-flash-exp:free"
-DEFAULT_LLM_TIMEOUT = 30.0
-DEFAULT_LLM_MAX_RETRIES = 7
+DEFAULT_LLM_BASE_URL = Settings.model_fields["llm_base_url"].default
+DEFAULT_LLM_MODEL = Settings.model_fields["llm_model"].default
+DEFAULT_LLM_TIMEOUT = Settings.model_fields["llm_timeout"].default
+DEFAULT_LLM_MAX_RETRIES = Settings.model_fields["llm_max_retries"].default
 
 
 @pytest.fixture
@@ -30,9 +31,9 @@ def real_client() -> OpenRouterClient:
     Uses LLM_API_KEY from env directly to avoid loading full Settings
     which requires all env vars (postgres, redis, etc.).
     """
-    api_key = os.environ.get("LLM_API_KEY")
+    api_key = os.environ.get("LLM_E2E_API_KEY") or os.environ.get("LLM_API_KEY")
     if not api_key:
-        pytest.skip("LLM_API_KEY not set in environment")
+        pytest.skip("LLM_API_KEY (or LLM_E2E_API_KEY) not set in environment")
 
     return OpenRouterClient(
         base_url=os.environ.get("LLM_BASE_URL", DEFAULT_LLM_BASE_URL),
