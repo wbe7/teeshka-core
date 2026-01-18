@@ -68,7 +68,7 @@ class TestSettingsDefaults:
 
             # LLM defaults
             assert settings.llm_base_url == "https://openrouter.ai/api/v1"
-            assert settings.llm_model == "nvidia/nemotron-3-nano-30b-a3b:free"
+            assert settings.llm_model == "nvidia/nemotron-3-nano-30b-a3b"
 
             # Langfuse defaults
             assert settings.langfuse_base_url == "https://langfuse.cloudnative.space"

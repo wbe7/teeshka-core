@@ -11,7 +11,7 @@ All settings are defined according to GEMINI.md section 2.5.
 
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,7 +36,9 @@ class Settings(BaseSettings):
 
     # === LLM Provider ===
     llm_base_url: str = "https://openrouter.ai/api/v1"
-    llm_model: str = "nvidia/nemotron-3-nano-30b-a3b:free"
+    llm_model: str = "nvidia/nemotron-3-nano-30b-a3b"
+    llm_timeout: float = 30.0  # Request timeout in seconds
+    llm_max_retries: int = Field(3, ge=0)  # Max retry attempts
 
     # === Secrets (required) ===
     telegram_bot_token: SecretStr

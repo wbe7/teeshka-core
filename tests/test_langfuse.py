@@ -121,7 +121,7 @@ class TestObserveDecorator:
 
         assert result == "result"
         mock_get_client.return_value.update_current_trace.assert_called_once_with(
-            id="test-trace-123",
+            tags=["test-trace-123"],
         )
 
     @patch("src.api.langfuse_client.observe")
@@ -185,7 +185,7 @@ class TestObserveDecorator:
 
         assert result == "sync_result"
         mock_get_client.return_value.update_current_trace.assert_called_once_with(
-            id="test-trace",
+            tags=["test-trace"],
         )
 
     @patch("src.api.langfuse_client.observe")

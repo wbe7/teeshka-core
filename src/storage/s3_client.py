@@ -83,7 +83,17 @@ class S3Client:
             region: AWS region. Defaults to settings.s3_region.
             presigned_ttl: Presigned URL TTL in seconds. Defaults to settings.s3_presigned_ttl.
         """
-        settings = get_settings()
+        # Only load settings if we need defaults
+        settings = None
+        if (
+            endpoint is ...
+            or bucket is None
+            or access_key is None
+            or secret_key is None
+            or region is None
+            or presigned_ttl is None
+        ):
+            settings = get_settings()
 
         # Handle endpoint: ... = use settings, None = no endpoint (moto), str = explicit
         if endpoint is ...:

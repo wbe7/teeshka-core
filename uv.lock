@@ -2359,6 +2359,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiobotocore" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "httpx" },
     { name = "langfuse" },
     { name = "pydantic-ai" },
     { name = "pydantic-settings" },
@@ -2380,6 +2381,7 @@ dev = [
 requires-dist = [
     { name = "aiobotocore", specifier = ">=2.17.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.128.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "langfuse", specifier = ">=3.0.0" },
     { name = "pydantic-ai", specifier = ">=1.39.0" },
     { name = "pydantic-settings", specifier = ">=2.0" },

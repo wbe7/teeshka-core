@@ -11,6 +11,7 @@ from src.api.logging import configure_logging, get_logger
 from src.api.middleware import RequestLoggingMiddleware
 from src.api.query import router as query_router
 from src.api.settings import get_settings
+from src.llm.client import OpenRouterClient
 
 
 @asynccontextmanager
@@ -30,9 +31,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     init_langfuse()
     log.info("langfuse_initialized", base_url=settings.langfuse_base_url)
 
+    # Initialize LLM Client
+    llm_client = OpenRouterClient(
+        base_url=settings.llm_base_url,
+        api_key=settings.llm_api_key.get_secret_value(),
+        model=settings.llm_model,
+        timeout=settings.llm_timeout,
+        max_retries=settings.llm_max_retries,
+    )
+    app.state.llm_client = llm_client
+    log.info("llm_client_initialized", model=settings.llm_model)
+
     log.info("application_started", version=app.version)
 
     yield
+
+    # Cleanup resources
+    await llm_client.aclose()
+    log.info("llm_client_closed")
 
     # Flush pending Langfuse events before shutdown
     shutdown_langfuse()
