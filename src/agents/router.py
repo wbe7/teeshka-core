@@ -49,14 +49,13 @@ class RouterAgent(BaseAgent):
             prompt=prompt,
             model=self.settings.llm_model_router,  # Use smart model for routing
         )
-        # Parse logic: match first word to category
-        category = response.strip().upper().split()[0]
-        # Remove punctuation if present (e.g. "SRE.")
-        category = category.rstrip(".,!?:;")
-
-        # Verify it's a valid category
-        if category in RouterCategory.__members__:
-            return category
+        # The model might respond with extra text. We find the first word that is a valid category.
+        category_text = response.strip().upper()
+        words = category_text.split()
+        for word in words:
+            cleaned_word = word.rstrip(".,!?:;")
+            if cleaned_word in RouterCategory:
+                return cleaned_word
 
         return RouterCategory.UNKNOWN
 
@@ -69,9 +68,11 @@ class RouterAgent(BaseAgent):
         """Process query: classify and delegate."""
         try:
             category = await self._classify_intent(query)
-        except LLMError as e:
+        except LLMError:
             # Fallback on LLM failure
-            return AgentResult(text=f"I'm having trouble understanding you right now. Error: {e}")
+            return AgentResult(
+                text="I'm having trouble understanding you right now. Please try again later."
+            )
 
         if category == RouterCategory.GENERAL:
             # Delegate to General Agent

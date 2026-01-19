@@ -4,6 +4,8 @@ Handles general queries (chit-chat, world knowledge) that do not require tool us
 Acts as a fallback "chat" agent.
 """
 
+import contextlib
+
 from src.agents.base import AgentResult, BaseAgent, SessionProtocol
 from src.agents.dependencies import LLMClient
 from src.api.langfuse_client import get_prompt
@@ -52,7 +54,8 @@ class GeneralAgent(BaseAgent):
         langfuse_prompt = await get_prompt("general.system.v1")
         if langfuse_prompt:
             # Assuming text prompt without variables for system
-            system_prompt = langfuse_prompt.compile()
+            with contextlib.suppress(ValueError):
+                system_prompt = langfuse_prompt.compile()
 
         response_text = await self.llm_client.complete(
             prompt=query,

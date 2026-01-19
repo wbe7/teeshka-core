@@ -103,14 +103,12 @@ async def test_router_unknown(router_agent, mock_llm_client):
 @pytest.mark.asyncio
 async def test_router_error_handling(router_agent, mock_llm_client):
     """Test LLM error handling."""
-    mock_llm_client.complete.side_effect = Exception("LLM Error")
+    from src.llm.client import LLMError
+
+    mock_llm_client.complete.side_effect = LLMError("LLM connection failed")
     query = "Any query"
 
-    # Should not raise, but return error result or fallback
-    # Assuming implementation returns AgentError or friendly message
-    # For now, let's just ensure it doesn't crash if we implement try-except
-    # Or expect it to raise if we want middleware to handle it.
-    # Plan says: "Handle LLMError gracefully".
+    result = await router_agent.run(None, query, {})
 
-    with pytest.raises(Exception, match="LLM Error"):
-        await router_agent.run(None, query, {})
+    assert isinstance(result, AgentResult)
+    assert "having trouble understanding you" in result.text
