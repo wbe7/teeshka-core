@@ -16,7 +16,7 @@ from src.llm.client import OpenRouterClient
 
 # Constants
 DEFAULT_ROUTER_MODEL = "nvidia/nemotron-3-nano-30b-a3b"
-DEFAULT_GENERAL_MODEL = "google/gemini-2.0-flash-exp:free"
+DEFAULT_GENERAL_MODEL = "google/gemini-3-flash-preview-20251217"
 
 
 @pytest.fixture

@@ -21,7 +21,7 @@ def mock_llm_client():
 def mock_settings():
     """Mock Settings."""
     settings = MagicMock(spec=Settings)
-    settings.llm_model_general = "google/gemini-2.0-flash-exp:free"
+    settings.llm_model_general = "google/gemini-3-flash-preview-20251217"
     return settings
 
 
@@ -48,5 +48,5 @@ async def test_general_agent_run(mock_llm_client, mock_settings):
     # Verify LLM was called with correct model override
     mock_llm_client.complete.assert_called_once()
     call_args = mock_llm_client.complete.call_args
-    assert call_args.kwargs["model"] == "google/gemini-2.0-flash-exp:free"
+    assert call_args.kwargs["model"] == "google/gemini-3-flash-preview-20251217"
     assert call_args.kwargs["prompt"] == query
