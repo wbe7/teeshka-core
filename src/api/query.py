@@ -4,18 +4,29 @@ import uuid_utils
 from fastapi import APIRouter, Depends
 
 from src.agents import RouterAgent, StubSession
+from src.agents.dependencies import LLMClient
+from src.agents.general import GeneralAgent
 from src.api.langfuse_client import observe_request
 from src.api.logging import get_logger, get_trace_id
 from src.api.schemas import TeeshkaRequest, TeeshkaResponse
+from src.api.settings import Settings, get_settings
+from src.llm.dependencies import get_llm_client
 
 router = APIRouter(tags=["query"])
 
 log = get_logger(__name__)
 
 
-def get_router_agent() -> RouterAgent:
-    """DI factory for Router Agent."""
-    return RouterAgent()
+def get_router_agent(
+    settings: Settings = Depends(get_settings),  # noqa: B008
+    llm_client: LLMClient = Depends(get_llm_client),  # noqa: B008
+) -> RouterAgent:
+    """DI factory for Router Agent.
+
+    Injects Settings, LLMClient, and GeneralAgent.
+    """
+    general_agent = GeneralAgent(llm_client, settings)
+    return RouterAgent(llm_client, settings, general_agent)
 
 
 @router.post("/query", response_model=TeeshkaResponse)

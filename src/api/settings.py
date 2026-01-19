@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     # === LLM Provider ===
     llm_base_url: str = "https://openrouter.ai/api/v1"
     llm_model: str = "nvidia/nemotron-3-nano-30b-a3b"
+    llm_model_router: str = "nvidia/nemotron-3-nano-30b-a3b"
+    llm_model_general: str = "google/gemini-3-flash-preview-20251217"
     llm_timeout: float = 30.0  # Request timeout in seconds
     llm_max_retries: int = Field(3, ge=0)  # Max retry attempts
 

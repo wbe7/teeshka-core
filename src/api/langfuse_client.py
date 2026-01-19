@@ -114,8 +114,49 @@ def observe_request[F: Callable](func: F) -> F:
     return observe()(sync_wrapper)  # type: ignore[return-value]
 
 
+# Prompt caching
+_prompt_cache: dict[str, tuple[float, object]] = {}
+
+
+async def get_prompt(name: str, cache_ttl: int = 300):
+    """Fetch prompt from Langfuse with caching.
+
+    Args:
+        name: Prompt name in Langfuse (e.g., 'router.classification.v1')
+        cache_ttl: Cache time-to-live in seconds (default 5 minutes)
+
+    Returns:
+        Prompt object or None if not found/disabled.
+    """
+    import time
+
+    # Re-impl logic to get client safely locally to avoid circular deps if any
+    settings = get_settings()
+    if not settings.langfuse_public_key:
+        return None
+
+    try:
+        # Use singleton if initialized
+        client = init_langfuse()
+
+        # Check cache
+        if name in _prompt_cache:
+            cached_time, cached_prompt = _prompt_cache[name]
+            if time.time() - cached_time < cache_ttl:
+                return cached_prompt
+
+        prompt = client.get_prompt(name)
+        _prompt_cache[name] = (time.time(), prompt)
+        return prompt
+    except Exception:
+        # Graceful failure - log debug to avoid spam
+        # log.debug("langfuse_prompt_fetch_failed", prompt_name=name)
+        return None
+
+
 __all__ = [
     "get_langfuse",
+    "get_prompt",
     "init_langfuse",
     "observe_request",
     "shutdown_langfuse",

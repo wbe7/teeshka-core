@@ -70,7 +70,9 @@ Async HTTP client for OpenRouter API with OpenAI-compatible interface.
 
 **Configuration:**
 - `LLM_BASE_URL` — API endpoint (default: `https://openrouter.ai/api/v1`)
-- **LLM_MODEL** — Model identifier (default: `nvidia/nemotron-3-nano-30b-a3b`)
+- **LLM_MODEL** — Default Model identifier (default: `nvidia/nemotron-3-nano-30b-a3b`)
+- **LLM_MODEL_ROUTER** — Model for Intent Classification (def: `nvidia/nemotron...`)
+- **LLM_MODEL_GENERAL** — Model for General Agent (def: `google/gemini...`)
 - `LLM_API_KEY` — OpenRouter API key (required)
 - `LLM_TIMEOUT` — Request timeout in seconds (default: `30.0`)
 - `LLM_MAX_RETRIES` — Max retry attempts (default: `3`)
@@ -193,5 +195,6 @@ Async S3/MinIO client for file attachments (images, voice, documents).
 ✅ **Phase 8b**: Attachment Storage (S3)  
 ✅ **Phase 9**: Router Agent Base  
 ✅ **Phase 10**: LLM Client (OpenRouter)
+✅ **Phase 11**: Router Agent (Intent Classification + General Agent)
 
 

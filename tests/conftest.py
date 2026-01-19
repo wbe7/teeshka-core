@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from dotenv import load_dotenv
@@ -27,11 +27,27 @@ def mock_langfuse_for_unit_tests(request):
 
 
 @pytest.fixture
-def client():
-    """Test client with application lifespan support."""
+def mock_llm_client_fixture():
+    """Mock LLMClient for API tests."""
+    mock = AsyncMock()
+    # Default behavior: return "GENERAL" to trigger GeneralAgent,
+    # which calls it again and gets "GENERAL" as text.
+    # We can refine this using side_effect in specific tests if needed.
+    mock.complete.return_value = "GENERAL"
+    return mock
+
+
+@pytest.fixture
+def client(mock_llm_client_fixture):
+    """Test client with application lifespan support and mocked LLM."""
     from fastapi.testclient import TestClient
 
     from src.api.main import app
+    from src.llm.dependencies import get_llm_client
+
+    app.dependency_overrides[get_llm_client] = lambda: mock_llm_client_fixture
 
     with TestClient(app) as c:
         yield c
+
+    app.dependency_overrides.clear()

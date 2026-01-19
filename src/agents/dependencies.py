@@ -7,7 +7,12 @@ from typing import Protocol
 class LLMClient(Protocol):
     """Protocol for LLM clients (implemented in Phase 10)."""
 
-    async def complete(self, prompt: str, system: str | None = None) -> str:
+    async def complete(
+        self,
+        prompt: str,
+        system: str | None = None,
+        model: str | None = None,
+    ) -> str:
         """Complete prompt with LLM."""
         ...
 
