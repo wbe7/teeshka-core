@@ -204,6 +204,21 @@ class OpenRouterClient:
         except ValueError as e:
             raise LLMError(f"Invalid JSON response: {e}", retryable=False) from e
 
+        # Check for error in response body
+        if "error" in data:
+            error_payload = data["error"]
+            if isinstance(error_payload, dict):
+                error_msg = error_payload.get("message", str(error_payload))
+            else:
+                error_msg = str(error_payload)
+
+            # Heuristic for retryable errors in body
+            is_retryable = any(
+                keyword in str(error_msg).lower()
+                for keyword in ["rate limit", "busy", "timeout", "unavailable"]
+            )
+            raise LLMError(f"API Error: {error_msg}", retryable=is_retryable)
+
         try:
             parsed_response = CompletionResponse.model_validate(data)
         except ValidationError as e:

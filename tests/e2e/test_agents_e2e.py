@@ -38,7 +38,7 @@ def real_llm_client() -> OpenRouterClient:
     return OpenRouterClient(
         base_url="https://openrouter.ai/api/v1",
         api_key=api_key,
-        model=os.environ.get("LLM_MODEL", DEFAULT_ROUTER_MODEL),
+        model=os.environ.get("LLM_MODEL", "not-used-in-agent-e2e-tests"),
     )
 
 

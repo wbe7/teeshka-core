@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.agents.general import GeneralAgent
+from src.agents.router import RouterAgent
 from src.api.health import router as health_router
 from src.api.langfuse_client import init_langfuse, shutdown_langfuse
 from src.api.logging import configure_logging, get_logger
@@ -41,6 +43,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     app.state.llm_client = llm_client
     log.info("llm_client_initialized", model=settings.llm_model)
+
+    # Initialize Agents (Singletons)
+    general_agent = GeneralAgent(llm_client, settings)
+    router_agent = RouterAgent(llm_client, settings, general_agent)
+    app.state.router_agent = router_agent
+    log.info("agents_initialized")
 
     log.info("application_started", version=app.version)
 

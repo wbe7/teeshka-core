@@ -49,10 +49,10 @@ class RouterAgent(BaseAgent):
             prompt=prompt,
             model=self.settings.llm_model_router,  # Use smart model for routing
         )
-        # The model might respond with extra text. We find the first word that is a valid category.
+        # The model might respond with extra text. We find the last word that is a valid category.
         category_text = response.strip().upper()
         words = category_text.split()
-        for word in words:
+        for word in reversed(words):
             cleaned_word = word.rstrip(".,!?:;")
             if cleaned_word in RouterCategory:
                 return cleaned_word
