@@ -59,4 +59,4 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
-fetch_reviews.py
+*.log

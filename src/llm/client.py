@@ -80,12 +80,18 @@ class OpenRouterClient:
         """Close the underlying HTTP client."""
         await self._client.aclose()
 
-    async def complete(self, prompt: str, system: str | None = None) -> str:
+    async def complete(
+        self,
+        prompt: str,
+        system: str | None = None,
+        model: str | None = None,
+    ) -> str:
         """Complete prompt via OpenRouter /chat/completions.
 
         Args:
             prompt: User message content
             system: Optional system prompt
+            model: Optional model override (uses self.model if None)
 
         Returns:
             Generated text from LLM
@@ -100,7 +106,7 @@ class OpenRouterClient:
         messages.append({"role": "user", "content": prompt})
 
         payload = {
-            "model": self.model,
+            "model": model or self.model,
             "messages": messages,
         }
 
@@ -197,6 +203,21 @@ class OpenRouterClient:
             data = response.json()
         except ValueError as e:
             raise LLMError(f"Invalid JSON response: {e}", retryable=False) from e
+
+        # Check for error in response body
+        if "error" in data:
+            error_payload = data["error"]
+            if isinstance(error_payload, dict):
+                error_msg = error_payload.get("message", str(error_payload))
+            else:
+                error_msg = str(error_payload)
+
+            # Heuristic for retryable errors in body
+            is_retryable = any(
+                keyword in str(error_msg).lower()
+                for keyword in ["rate limit", "busy", "timeout", "unavailable"]
+            )
+            raise LLMError(f"API Error: {error_msg}", retryable=is_retryable)
 
         try:
             parsed_response = CompletionResponse.model_validate(data)

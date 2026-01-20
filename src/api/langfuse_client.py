@@ -16,10 +16,12 @@ Usage:
 """
 
 import asyncio
+import time
 from collections.abc import Callable
 from functools import lru_cache, wraps
 
 from langfuse import Langfuse, get_client, observe
+from langfuse.model import Prompt
 
 from src.api.logging import get_logger, get_trace_id
 from src.api.settings import get_settings
@@ -114,8 +116,53 @@ def observe_request[F: Callable](func: F) -> F:
     return observe()(sync_wrapper)  # type: ignore[return-value]
 
 
+# Prompt caching
+_prompt_cache: dict[str, tuple[float, Prompt]] = {}
+_cache_lock = asyncio.Lock()
+
+
+async def get_prompt(name: str, cache_ttl: int = 300) -> Prompt | None:
+    """Fetch prompt from Langfuse with caching.
+
+    Args:
+        name: Prompt name in Langfuse (e.g., 'router.classification.v1')
+        cache_ttl: Cache time-to-live in seconds (default 5 minutes)
+
+    Returns:
+        Prompt object or None if not found/disabled.
+    """
+    settings = get_settings()
+    if not settings.langfuse_public_key:
+        return None
+
+    # First check without lock for performance on cache hit
+    if name in _prompt_cache:
+        cached_time, cached_prompt = _prompt_cache[name]
+        if time.time() - cached_time < cache_ttl:
+            return cached_prompt
+
+    async with _cache_lock:
+        # Re-check cache after acquiring lock to handle race condition
+        if name in _prompt_cache:
+            cached_time, cached_prompt = _prompt_cache[name]
+            if time.time() - cached_time < cache_ttl:
+                return cached_prompt
+
+        # If still a miss, fetch and populate cache
+        try:
+            client = init_langfuse()
+            prompt = await asyncio.to_thread(client.get_prompt, name)
+            _prompt_cache[name] = (time.time(), prompt)
+            return prompt
+        except Exception as e:
+            # Graceful failure - log debug to avoid spam
+            log.debug("langfuse_prompt_fetch_failed", prompt_name=name, error=str(e))
+            return None
+
+
 __all__ = [
     "get_langfuse",
+    "get_prompt",
     "init_langfuse",
     "observe_request",
     "shutdown_langfuse",

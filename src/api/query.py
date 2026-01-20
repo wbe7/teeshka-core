@@ -1,7 +1,7 @@
 """Query endpoint - main entry point for Teeshka requests (GEMINI.md §9)."""
 
 import uuid_utils
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from src.agents import RouterAgent, StubSession
 from src.api.langfuse_client import observe_request
@@ -13,9 +13,12 @@ router = APIRouter(tags=["query"])
 log = get_logger(__name__)
 
 
-def get_router_agent() -> RouterAgent:
-    """DI factory for Router Agent."""
-    return RouterAgent()
+def get_router_agent(request: Request) -> RouterAgent:
+    """Dependency to retrieve Router Agent singleton from app state.
+
+    Agent is initialized in src.api.main:lifespan.
+    """
+    return request.app.state.router_agent
 
 
 @router.post("/query", response_model=TeeshkaResponse)

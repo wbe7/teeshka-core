@@ -4,8 +4,8 @@
 class TestQueryEndpoint:
     """Tests for POST /api/v1/query stub endpoint."""
 
-    def test_query_returns_echo(self, client) -> None:
-        """Stub returns echo of query."""
+    def test_query_returns_general_answer(self, client) -> None:
+        """Stub returns General Agent answer (Mocked)."""
         response = client.post(
             "/api/v1/query",
             json={
@@ -16,7 +16,8 @@ class TestQueryEndpoint:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["text"] == "Echo: Hello, Teeshka!"
+        assert data["text"] == "GENERAL"
+        assert "router" in data["agents_used"]
 
     def test_query_returns_trace_id(self, client) -> None:
         """Response includes trace_id."""
